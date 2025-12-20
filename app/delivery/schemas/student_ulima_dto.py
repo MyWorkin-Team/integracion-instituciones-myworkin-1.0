@@ -1,13 +1,13 @@
 from typing import Optional, List, Dict
 from datetime import date
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 class StudentULimaDTO(BaseModel):
     # 🔑 Identidad
-    id: str
-    firstName: str
+    id: Optional[str] = None
+    firstName: Optional[str] = None
     middleName: Optional[str] = None
-    lastName: str
+    lastName: Optional[str] = None
     secondLastName: Optional[str] = None
     fullName: Optional[str] = None
     image: Optional[str] = None
@@ -25,7 +25,7 @@ class StudentULimaDTO(BaseModel):
     coPers: Optional[str] = None
     coIdPs: Optional[str] = None
 
-    # 📍 Contacto / Dirección
+    # 📍 Dirección / contacto
     street: Optional[str] = None
     city: Optional[str] = None
     dependentLocality: Optional[str] = None
@@ -33,14 +33,14 @@ class StudentULimaDTO(BaseModel):
     zip: Optional[str] = None
     country: Optional[str] = None
 
-    email: EmailStr
+    email: Optional[EmailStr] = None
     emailUniversity: Optional[EmailStr] = None
     emailAlternativo: Optional[EmailStr] = None
     phone: Optional[str] = None
     telefonoAlternativo: Optional[str] = None
 
-    # 💼 Situación laboral
-    situacionLaboral: Optional[str] = None  # "1","2","3","4"
+    # 💼 Laboral
+    situacionLaboral: Optional[str] = None
     interesesLaborales: Optional[List[str]] = None
 
     # 🎓 Académico
@@ -49,12 +49,10 @@ class StudentULimaDTO(BaseModel):
     degreeMode: Optional[str] = None
     degreeAward: Optional[str] = None
     degreeYear: Optional[str] = None
-
     degreePrimary: Optional[bool] = None
     degree: Optional[str] = None
     subjectArea: Optional[str] = None
     institucionEducacionSuperior: Optional[str] = None
-
     rankingUlima: Optional[str] = None
     ppa: Optional[str] = None
     cicloUltimaMatricula: Optional[str] = None
@@ -77,5 +75,5 @@ class StudentULimaDTO(BaseModel):
     # 🔐 Derechos
     rights: Optional[Dict[str, bool]] = None
 
-    class Config:
-        extra = "ignore"
+    # ⭐ CLAVE
+    model_config = ConfigDict(extra="allow")
