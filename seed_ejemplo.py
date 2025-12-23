@@ -131,7 +131,7 @@ def generate_student(index: int) -> dict:
 
 def main():
     success = 0
-    for i in range(10):
+    for i in range(300):
         student = generate_student(i)
         response = requests.post(ENDPOINT, json=student)
         if response.status_code in (200, 201):

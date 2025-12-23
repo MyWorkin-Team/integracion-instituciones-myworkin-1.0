@@ -1,13 +1,18 @@
 import requests
 
-url = "http://127.0.0.1:8000/api/students/ulima/by-co-id-ps/PS100000"
+url = "http://127.0.0.1:8000/api/students/ulima/updated/PS100002"
+
+# payload = {
+#     "phone": "789789789",
+#     "situacionLaboral": "1",
+#     "interesesLaborales": ["IT", "DATA", "PROGRAMMING"],
+#     "email": "test2012@gmail.com",
+#     "city": "Trujiyork",
+#     "alumni": "true"
+# }
 
 payload = {
-    "phone": "999888777",
-    "coIdPs": "PS100002",
-    "situacionLaboral": "1",
-    "interesesLaborales": ["IT", "DATA"],
-    "email": "test2012@gmail.com"
+    "country": "ES"
 }
 
 headers = {
