@@ -4,3 +4,5 @@ firebase-admin
 pydantic
 slowapi
 email-validator
+pandas
+openpyx
