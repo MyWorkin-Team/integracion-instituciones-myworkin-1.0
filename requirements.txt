@@ -5,4 +5,4 @@ pydantic
 slowapi
 email-validator
 pandas
-openpyx
+openpyxl
