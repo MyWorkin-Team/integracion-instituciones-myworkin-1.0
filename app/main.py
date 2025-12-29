@@ -5,14 +5,21 @@ from starlette.responses import JSONResponse
 
 from app.core.limiter import limiter
 from app.delivery.http.routers.student_router import router as student_router
-from app.delivery.http.middlewares.ip_middleware import IPWhitelistMiddleware
+from app.delivery.http.routers.test_router import router as test_router
+from app.delivery.http.middlewares.ip_middleware import IPAndApiKeyMiddleware
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,  # 👈 cambia a DEBUG si quieres más detalle
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+)
 
 app = FastAPI(
     title="Integración Instituciones - MyWorkIn",
     version="1.0.0"
 )
 
-app.add_middleware(IPWhitelistMiddleware)
+app.add_middleware(IPAndApiKeyMiddleware)
 
 # Registrar limiter en el state
 app.state.limiter = limiter
@@ -34,6 +41,12 @@ app.include_router(
     tags=["Students"]
 )
 
-@app.get("/")
-def health_check():
+app.include_router(
+    test_router,
+    prefix="/test",
+    tags=["Tests"]
+)
+
+@app.get("/health")
+def health():
     return {"status": "ok"}

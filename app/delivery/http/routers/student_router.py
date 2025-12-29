@@ -45,3 +45,10 @@ async def update_ulima_student(co_id_ps: str, body: StudentULimaDTO):
         "message": "Student updated successfully",
         "co_id_ps": co_id_ps
     }
+
+@router.get("/students/ulima")
+async def test_route():
+    return {
+        "status": "ok",
+        "message": "Te listo estudiantes de ulima"
+    }

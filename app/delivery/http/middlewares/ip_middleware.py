@@ -1,21 +1,49 @@
-from fastapi import Request, HTTPException
+import os
+import logging
+from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import JSONResponse
 
-# 🔐 IPs permitidas
+logger = logging.getLogger("push_security")
+
 ALLOWED_IPS = {
     "127.0.0.1",
-    "localhost",
-    "192.168.1.10",
+    "::1",
 }
 
-class IPWhitelistMiddleware(BaseHTTPMiddleware):
+PUSH_API_KEY = os.getenv("PUSH_API_KEY", "dev-push-key")
+
+# 🔐 RUTAS PROTEGIDAS
+PROTECTED_PATHS = (
+    "/api"         # /push/*
+)
+
+class IPAndApiKeyMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        client_ip = request.client.host
+
+        path = request.url.path
+        logger.info(f"[PUSH] Incoming request path: {path}")
+
+        if not path.startswith("/api"):
+            logger.info(f"[PUSH] Skipping security for path: {path}")
+            return await call_next(request)
+
+        client_ip = request.headers.get("x-test-ip") or request.client.host
+        api_key = request.headers.get("x-api-key")
+
+        logger.warning(f"[PUSH] PROTECTED PATH | IP={client_ip}")
 
         if client_ip not in ALLOWED_IPS:
-            raise HTTPException(
+            return JSONResponse(
                 status_code=403,
-                detail=f"IP {client_ip} not allowed"
+                content={"detail": "IP not allowed"}
             )
 
+        if not api_key or api_key != PUSH_API_KEY:
+            return JSONResponse(
+                status_code=401,
+                content={"detail": "Invalid API Key"}
+            )
+
+        logger.info("[PUSH] Access granted")
         return await call_next(request)
