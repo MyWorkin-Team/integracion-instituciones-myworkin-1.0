@@ -9,6 +9,7 @@ logger = logging.getLogger("push_security")
 ALLOWED_IPS = {
     "127.0.0.1",
     "::1",
+    "192.168.18.8"
 }
 
 PUSH_API_KEY = os.getenv("PUSH_API_KEY", "dev-push-key")
