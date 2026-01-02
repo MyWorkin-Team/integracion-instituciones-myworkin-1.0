@@ -2,15 +2,18 @@ from fastapi import FastAPI, Request
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
 from starlette.responses import JSONResponse
-
-from app.core.limiter import limiter
-from app.delivery.http.routers.student_router import router as student_router
-from app.delivery.http.routers.test_router import router as test_router
-from app.delivery.http.middlewares.ip_middleware import IPAndApiKeyMiddleware
 import logging
 
+from app.core.limiter import limiter
+from app.delivery.http.middlewares.ip_middleware import IPAndApiKeyMiddleware
+
+# Routers
+from app.delivery.http.routers.student_router import router as student_router
+from app.delivery.http.routers.test_router import router as test_router
+from app.delivery.http.routers.health_router import router as health_router
+
 logging.basicConfig(
-    level=logging.INFO,  # 👈 cambia a DEBUG si quieres más detalle
+    level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
 )
 
@@ -19,12 +22,11 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# 🔐 Middlewares
 app.add_middleware(IPAndApiKeyMiddleware)
 
-# Registrar limiter en el state
+# Rate limit
 app.state.limiter = limiter
-
-# Middleware SlowAPI
 app.add_middleware(SlowAPIMiddleware)
 
 @app.exception_handler(RateLimitExceeded)
@@ -34,19 +36,7 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
         content={"detail": "Rate limit exceeded"}
     )
 
-# Routers
-app.include_router(
-    student_router,
-    prefix="/api",
-    tags=["Students"]
-)
-
-app.include_router(
-    test_router,
-    prefix="/test",
-    tags=["Tests"]
-)
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
+# 🔌 Routers
+app.include_router(student_router, prefix="/api/students", tags=["Students"])
+app.include_router(test_router, prefix="/test", tags=["Test"])
+app.include_router(health_router, tags=["Health"])

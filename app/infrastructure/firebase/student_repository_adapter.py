@@ -14,9 +14,24 @@ class StudentRepositoryAdapter(StudentRepositoryPort):
         ref.set(student.__dict__, merge=True)
         return "updated" if exists else "created"
 
-    def find_by_id(self, student_id: str):
-        doc = self.collection.document(student_id).get()
+    def find_by_id(self,co_id_ps: str):
+        doc = self.collection.document(co_id_ps).get()
         return doc.to_dict() if doc.exists else None
+    
+    def find_by_coIdPs(self, co_id_ps: str):
+        docs = (
+            self.collection
+            .where(filter=FieldFilter("coIdPs", "==", co_id_ps))
+            .limit(1)
+            .stream()
+        )
+
+        docs = list(docs)
+        if not docs:
+            return None
+
+        return docs[0].to_dict()
+
 
     def update_by_co_id_ps(self, co_id_ps: str, data: dict) -> bool:
         docs = (
