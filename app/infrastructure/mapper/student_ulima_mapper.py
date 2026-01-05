@@ -13,6 +13,9 @@ def ulima_to_domain(dto: StudentULimaDTO) -> Student:
     ]
     fullName = " ".join([p for p in full_name_parts if p])
 
+    rights = data.get("rights") or {}
+
+
     return Student(
         # Identidad
         id=data.get("id"),
@@ -89,11 +92,12 @@ def ulima_to_domain(dto: StudentULimaDTO) -> Student:
         experientialLearning=data.get("preferences", {}).get("experientialLearning"),
 
         # Derechos
-        canApplyJobs=data.get("rights", {}).get("canApplyJobs"),
-        canDownloadCertificates=data.get("rights", {}).get("canDownloadCertificates"),
-        canEditProfile=data.get("rights", {}).get("canEditProfile"),
+        canApplyJobs = rights.get("canApplyJobs"),
+        canDownloadCertificates = rights.get("canDownloadCertificates"),
+        canEditProfile = rights.get("canEditProfile"),
+
 
         # Laboral
         situacionLaboral=data.get("situacionLaboral"),
-        interesesLaborales=data.get("interesesLaborales") or [],
+        interesesLaborales=data.get("interesesLaborales") or []
     )

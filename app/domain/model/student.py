@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from typing import Optional, List
 from datetime import datetime
 
@@ -91,3 +91,8 @@ class Student:
     # Laboral
     situacionLaboral: Optional[str] = None
     interesesLaborales: Optional[List[str]] = None
+
+      # 🔥 CLAVE
+    def to_firestore_dict(self) -> dict:
+        data = asdict(self)
+        return {k: v for k, v in data.items() if v is not None}
