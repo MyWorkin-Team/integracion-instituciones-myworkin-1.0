@@ -1,6 +1,7 @@
 from dataclasses import dataclass, asdict
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+from pydantic import BaseModel
 
 
 @dataclass
@@ -36,3 +37,4 @@ class Employer:
     def to_firestore_dict(self) -> dict:
         data = asdict(self)
         return {k: v for k, v in data.items() if v is not None}
+    

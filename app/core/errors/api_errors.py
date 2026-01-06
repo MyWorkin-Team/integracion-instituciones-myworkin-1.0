@@ -1,0 +1,8 @@
+from enum import Enum
+
+
+class ApiErrorCode(str, Enum):
+    INVALID_DATA = "INVALID_DATA"
+    INVALID_API_KEY = "INVALID_API_KEY"
+    NOT_FOUND = "NOT_FOUND"
+    RATE_LIMIT_EXCEEDED = "RATE_LIMIT_EXCEEDED"

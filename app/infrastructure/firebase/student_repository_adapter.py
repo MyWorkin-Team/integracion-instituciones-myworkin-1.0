@@ -6,7 +6,7 @@ class StudentRepositoryAdapter(StudentRepositoryPort):
 
     def __init__(self, client):
         self.client = client
-        self.collection = client.collection("students")  # ✅ CLAVE
+        self.collection = client.collection("users")  # ✅ CLAVE
 
     def save(self, student: Student) -> str:
         ref = self.collection.document(student.id)
