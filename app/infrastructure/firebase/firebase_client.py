@@ -102,7 +102,10 @@ def create_firebase_user(email: str, password: str, display_name: str | None = N
         }
 
     except auth.EmailAlreadyExistsError:
-        raise ValueError("El email ya está registrado en Firebase Auth")
+        # ✅ CLAVE
+        raise FirebaseUserAlreadyExists(
+            "El email ya está registrado en Firebase Auth"
+        )
 
     except Exception as e:
-        raise RuntimeError(f"Error creando usuario Firebase: {str(e)}")
+        raise FirebaseUserCreateError(str(e))
