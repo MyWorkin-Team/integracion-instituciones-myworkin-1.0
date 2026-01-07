@@ -16,7 +16,6 @@ class RegisterStudentUseCase:
             display_name=student.displayName
         )
         
-        print("Firebase user created:", firebase_user)
         student.uid = firebase_user["uid"]
         # 2️⃣ Set timestamps
         student.created_at = datetime.now(timezone.utc).isoformat()

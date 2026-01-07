@@ -12,25 +12,43 @@ from app.infrastructure.firebase.firebase_exceptions import (
 # ------------------------------------
 # Inicialización ÚNICA de Firebase
 # ------------------------------------
+
+# DEPLOY
+
 def init_firebase():
     if firebase_admin._apps:
         return
 
-    # 📍 root del proyecto (donde está app/)
-    project_root = os.getcwd()
+    service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
 
-    service_account_path = os.path.join(
-        project_root,
-        "serviceAccountKey.json"
-    )
+    if not service_account_json:
+        raise RuntimeError("FIREBASE_SERVICE_ACCOUNT_JSON not set")
 
-    if not os.path.exists(service_account_path):
-        raise RuntimeError(
-            f"Firebase service account not found at {service_account_path}"
-        )
+    cred_dict = json.loads(service_account_json)
 
-    cred = credentials.Certificate(service_account_path)
+    cred = credentials.Certificate(cred_dict)
     firebase_admin.initialize_app(cred)
+
+
+# def init_firebase():
+#     if firebase_admin._apps:
+#         return
+
+#     # 📍 root del proyecto (donde está app/)
+#     project_root = os.getcwd()
+
+#     service_account_path = os.path.join(
+#         project_root,
+#         "serviceAccountKey.json"
+#     )
+
+#     if not os.path.exists(service_account_path):
+#         raise RuntimeError(
+#             f"Firebase service account not found at {service_account_path}"
+#         )
+
+#     cred = credentials.Certificate(service_account_path)
+#     firebase_admin.initialize_app(cred)
 
 
 # ------------------------------------

@@ -10,7 +10,7 @@ from typing import List, Optional
 EXCEL_FILE = "test_students.xlsx"
 
 API_URL = "http://127.0.0.1:8000/api/students/push/ulima"
-API_KEY = "dev-push-key"
+API_KEY = "dev-push-keyxxxxx"
 
 TIMEOUT = 15  # segundos
 
