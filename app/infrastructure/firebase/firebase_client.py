@@ -131,52 +131,52 @@ def create_firebase_user(email: str, password: str, display_name: str | None = N
         raise FirebaseUserCreateError(str(e))
     
 
-def update_firebase_user(
-    uid: str,
-    email: str | None = None,
-    password: str | None = None,
-    display_name: str | None = None,
-    disabled: bool | None = None,
-):
-    """
-    Actualiza un usuario en Firebase Authentication
-    """
-    try:
-        user = auth.update_user(
-            uid,
-            email=email,
-            password=password,
-            display_name=display_name,
-            disabled=disabled,
-        )
+# def update_firebase_user(
+#     uid: str,
+#     email: str | None = None,
+#     password: str | None = None,
+#     display_name: str | None = None,
+#     disabled: bool | None = None,
+# ):
+#     """
+#     Actualiza un usuario en Firebase Authentication
+#     """
+#     try:
+#         user = auth.update_user(
+#             uid,
+#             email=email,
+#             password=password,
+#             display_name=display_name,
+#             disabled=disabled,
+#         )
 
-        return {
-            "uid": user.uid,
-            "email": user.email,
-            "display_name": user.display_name,
-            "disabled": user.disabled,
-        }
+#         return {
+#             "uid": user.uid,
+#             "email": user.email,
+#             "display_name": user.display_name,
+#             "disabled": user.disabled,
+#         }
 
-    except auth.UserNotFoundError:
-        raise FirebaseUserNotFound("Usuario no existe en Firebase")
+#     except auth.UserNotFoundError:
+#         raise FirebaseUserNotFound("Usuario no existe en Firebase")
 
-    except Exception as e:
-        raise FirebaseUserUpdateError(str(e))
+#     except Exception as e:
+#         raise FirebaseUserUpdateError(str(e))
 
-def update_firebase_user_by_email(
-    email: str,
-    **kwargs
-):
-    """
-    Busca el usuario por email y lo actualiza
-    """
-    try:
-        user = auth.get_user_by_email(email)
+# def update_firebase_user_by_email(
+#     email: str,
+#     **kwargs
+# ):
+#     """
+#     Busca el usuario por email y lo actualiza
+#     """
+#     try:
+#         user = auth.get_user_by_email(email)
 
-        return update_firebase_user(
-            uid=user.uid,
-            **kwargs
-        )
+#         return update_firebase_user(
+#             uid=user.uid,
+#             **kwargs
+#         )
 
-    except auth.UserNotFoundError:
-        raise FirebaseUserNotFound("Usuario no existe en Firebase")
+#     except auth.UserNotFoundError:
+#         raise FirebaseUserNotFound("Usuario no existe en Firebase")

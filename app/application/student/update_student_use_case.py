@@ -10,12 +10,12 @@ class UpdateStudentByCoIdPsUseCase:
 
     def execute(self, co_id_ps: str, student: Student) -> bool:
 
-        # 🔥 1️⃣ Actualizar Firebase (igual que en Register)
-        update_firebase_user(
-            uid=student.firebase_uid,
-            email=student.email,
-            display_name=student.displayName,
-        )
+        # # 🔥 1️⃣ Actualizar Firebase (igual que en Register)
+        # update_firebase_user(
+        #     uid=student.firebase_uid,
+        #     email=student.email,
+        #     display_name=student.displayName,
+        # )
 
         # 🔥 2️⃣ Actualizar Firestore
         data = student.to_firestore_dict()
