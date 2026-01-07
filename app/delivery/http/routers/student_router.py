@@ -75,8 +75,7 @@ async def upsert_ulima_student(
     # 1️⃣ UPDATE
     uc_update = update_by_co_id_ps_use_case()
     updated = uc_update.execute(
-        student.coIdPs,
-        student  # 👈 importante: JSON-safe
+        student
     )
 
     if updated:
@@ -130,7 +129,7 @@ async def test_route():
     response_model=ApiResponse[dict]
 )
 async def pull_ulima_student(student_id: str):
-
+    print("🔔 Pull ULima Student:", student_id)
     uc = get_student_by_id_use_case()
     student = uc.execute(student_id)
 

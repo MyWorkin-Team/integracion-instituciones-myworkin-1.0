@@ -92,6 +92,8 @@ class Student:
     situacionLaboral: Optional[str] = None
     interesesLaborales: Optional[List[str]] = None
 
+    uid: Optional[str] = None  # Firebase Auth UID
+
       # 🔥 CLAVE
     def to_firestore_dict(self) -> dict:
         data = asdict(self)

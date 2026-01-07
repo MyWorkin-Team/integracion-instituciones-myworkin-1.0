@@ -31,7 +31,8 @@ class StudentRepositoryAdapter(StudentRepositoryPort):
             return None
 
         return docs[0].to_dict()
-
+    
+    
 
     def update_by_co_id_ps(self, co_id_ps: str, data: dict) -> bool:
         docs = (

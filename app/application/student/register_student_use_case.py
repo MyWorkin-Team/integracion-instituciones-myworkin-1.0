@@ -9,12 +9,17 @@ class RegisterStudentUseCase:
         self.repo = repo
 
     def execute(self, student: Student):
-        # Set timestamp in backend
+        # 1️⃣ Crear usuario en Firebase Auth
         firebase_user = create_firebase_user(
             email=student.email,
-            password=student.coIdPs,          # ⚠️ ver nota abajo
+            password=student.coIdPs,
             display_name=student.displayName
         )
-
+        
+        print("Firebase user created:", firebase_user)
+        student.uid = firebase_user["uid"]
+        # 2️⃣ Set timestamps
         student.created_at = datetime.now(timezone.utc).isoformat()
+
+        # 3️⃣ Guardar UID de Firebase en Firestore
         return self.repo.save(student)

@@ -1,0 +1,202 @@
+import pandas as pd
+import requests
+from datetime import datetime
+from typing import List, Optional
+
+
+# --------------------------------
+# CONFIG
+# --------------------------------
+EXCEL_FILE = "test_students.xlsx"
+
+API_URL = "http://127.0.0.1:8000/api/students/push/ulima"
+API_KEY = "dev-push-key"
+
+TIMEOUT = 15  # segundos
+
+
+# --------------------------------
+# HELPERS
+# --------------------------------
+def to_str(value) -> Optional[str]:
+    if pd.isna(value) or value is None:
+        return None
+    return str(value)
+
+
+def parse_datetime(value) -> Optional[str]:
+    if pd.isna(value) or value is None:
+        return None
+    if isinstance(value, datetime):
+        return value.isoformat()
+    try:
+        return datetime.fromisoformat(str(value)).isoformat()
+    except Exception:
+        return None
+
+
+def parse_list(value) -> Optional[List[str]]:
+    if pd.isna(value) or value is None:
+        return None
+    if isinstance(value, list):
+        return value
+    return [v.strip() for v in str(value).split(",") if v.strip()]
+
+
+# --------------------------------
+# PAYLOAD BUILDER
+# --------------------------------
+def row_to_payload(row: pd.Series) -> dict:
+    payload = {
+        # Identidad
+        "displayName": to_str(row["displayName"]),
+        "email": to_str(row["email"]),
+        "phone": to_str(row["phone"]),
+        "firstName": to_str(row["firstName"]),
+        "middleName": to_str(row["middleName"]),
+        "lastName": to_str(row["lastName"]),
+        "secondLastName": to_str(row["secondLastName"]),
+        "fullName": to_str(row["fullName"]),
+        "image": to_str(row["image"]),
+        "birthdate": parse_datetime(row["birthdate"]),
+        "gender": to_str(row["gender"]),
+        "discapacidad": to_str(row["discapacidad"]),
+        "alumni": bool(row["alumni"]) if not pd.isna(row["alumni"]) else None,
+
+        # Estado
+        "role": to_str(row["role"]),
+        "status": to_str(row["status"]),
+        "university": to_str(row["university"]),
+        "verified": bool(row["verified"]) if not pd.isna(row["verified"]) else None,
+        "hasCV": bool(row["hasCV"]) if not pd.isna(row["hasCV"]) else None,
+        "usoPrimerHerramienta": bool(row["usoPrimerHerramienta"]) if not pd.isna(row["usoPrimerHerramienta"]) else None,
+
+        # Onboarding
+        "onboarding_completed": bool(row["onboarding_completed"]) if not pd.isna(row["onboarding_completed"]) else None,
+        "onboarding_skipped": bool(row["onboarding_skipped"]) if not pd.isna(row["onboarding_skipped"]) else None,
+        "onboarding_skippedAt": parse_datetime(row["onboarding_skippedAt"]),
+
+        # Fechas
+        "createdAt": parse_datetime(row["createdAt"]),
+        "updatedAt": parse_datetime(row["updatedAt"]),
+
+        # IDs (🔥 strings aunque sean números)
+        "schoolStudentId": to_str(row["schoolStudentId"]),
+        "coPers": to_str(row["coPers"]),
+        "coIdPs": to_str(row["coIdPs"]),
+
+        # Documento
+        "tipoDocumento": to_str(row["document_tipoDocumento"]),
+        "numeroDocumento": to_str(row["document_numeroDocumento"]),
+        "paisEmisionDocumento": to_str(row["document_paisEmisionDocumento"]),
+
+        # Dirección
+        "street": to_str(row["address_street"]),
+        "city": to_str(row["address_city"]),
+        "dependentLocality": to_str(row["address_dependentLocality"]),
+        "state": to_str(row["address_state"]),
+        "zip": to_str(row["address_zip"]),
+        "country": to_str(row["address_country"]),
+
+        # Académico
+        "applicantType": to_str(row["academic_applicantType"]),
+        "degreeLevel": to_str(row["academic_degreeLevel"]),
+        "degreeMode": to_str(row["academic_degreeMode"]),
+        "degreeAward": to_str(row["academic_degreeAward"]),
+        "degreeYear": to_str(row["academic_degreeYear"]),
+        "degreePrimary": to_str(row["academic_degreePrimary"]),
+        "degree": to_str(row["academic_degree"]),
+        "subjectArea": to_str(row["academic_subjectArea"]),
+        "institucionEducacionSuperior": to_str(row["academic_institucionEducacionSuperior"]),
+        "rankingUlima": to_str(row["academic_rankingUlima"]),
+        "ppa": to_str(row["academic_ppa"]),
+        "cicloUltimaMatricula": to_str(row["academic_cicloUltimaMatricula"]),
+        "creditosAprobados": to_str(row["academic_creditosAprobados"]),
+        "creditosMatriculados": to_str(row["academic_creditosMatriculados"]),
+        "fechaEgreso": parse_datetime(row["academic_fechaEgreso"]),
+
+        # Estudios
+        "tienesColegiatura": bool(row["studies_tienesColegiatura"]) if not pd.isna(row["studies_tienesColegiatura"]) else None,
+        "tienesMaestria": bool(row["studies_tienesMaestria"]) if not pd.isna(row["studies_tienesMaestria"]) else None,
+        "tienesMaestriaExternaUl": bool(row["studies_tienesMaestriaExternaUl"]) if not pd.isna(row["studies_tienesMaestriaExternaUl"]) else None,
+
+        # Preferencias
+        "languages": parse_list(row["preferences_languages"]),
+        "receiveJobBlastEmail": bool(row["preferences_receiveJobBlastEmail"]) if not pd.isna(row["preferences_receiveJobBlastEmail"]) else None,
+        "experientialLearning": bool(row["preferences_experientialLearning"]) if not pd.isna(row["preferences_experientialLearning"]) else None,
+
+        # Derechos
+        "canApplyJobs": bool(row["rights_canApplyJobs"]) if not pd.isna(row["rights_canApplyJobs"]) else None,
+        "canDownloadCertificates": bool(row["rights_canDownloadCertificates"]) if not pd.isna(row["rights_canDownloadCertificates"]) else None,
+        "canEditProfile": bool(row["rights_canEditProfile"]) if not pd.isna(row["rights_canEditProfile"]) else None,
+
+        # Laboral
+        "situacionLaboral": to_str(row["situacionLaboral"]),
+        "interesesLaborales": parse_list(row["interesesLaborales"]),
+    }
+
+    # 🔥 Eliminar nulls (FastAPI + Pydantic felices)
+    return {k: v for k, v in payload.items() if v is not None}
+
+
+# --------------------------------
+# API CALL
+# --------------------------------
+def send_payload(payload: dict) -> bool:
+    headers = {
+        "Content-Type": "application/json",
+        "x-api-key": API_KEY,
+    }
+
+    try:
+        response = requests.post(
+            API_URL,
+            json=payload,
+            headers=headers,
+            timeout=TIMEOUT,
+        )
+    except Exception as e:
+        print(f"❌ Error conexión ({payload.get('coIdPs')}): {e}")
+        return False
+
+    if response.status_code not in (200, 201):
+        print(
+            f"❌ API ERROR ({payload.get('coIdPs')}) "
+            f"status={response.status_code} body={response.text}"
+        )
+        return False
+
+    return True
+
+
+# --------------------------------
+# MAIN
+# --------------------------------
+def main():
+    df = pd.read_excel(EXCEL_FILE)
+
+    success = 0
+    failed = 0
+
+    for index, row in df.iterrows():
+        try:
+            payload = row_to_payload(row)
+
+            ok = send_payload(payload)
+            if ok:
+                success += 1
+            else:
+                failed += 1
+
+        except Exception as e:
+            failed += 1
+            print(f"💥 Error fila {index + 1}: {e}")
+
+    print("\n--------------------------------")
+    print(f"✅ Enviados correctamente: {success}")
+    print(f"❌ Fallidos: {failed}")
+    print("--------------------------------")
+
+
+if __name__ == "__main__":
+    main()

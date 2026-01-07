@@ -12,7 +12,7 @@ from app.domain.model.student import Student  # donde tienes tu dataclass
 # CONFIG
 # --------------------------------
 EXCEL_FILE = "students_ulima_full.xlsx"
-COLLECTION_NAME = "students"
+COLLECTION_NAME = "users"
 SERVICE_ACCOUNT_FILE = "serviceAccountKey.json"
 
 
@@ -132,6 +132,7 @@ def row_to_student(row: pd.Series) -> Student:
         situacionLaboral=row["situacionLaboral"],
         interesesLaborales=parse_list(row["interesesLaborales"]),
     )
+
 
 
 def student_to_firestore(student: Student) -> dict:
