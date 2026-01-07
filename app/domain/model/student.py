@@ -9,7 +9,7 @@ class Student:
     id: Optional[str] = None
     displayName: Optional[str] = None
     email: Optional[str] = None
-    phone: Optional[str] = None
+    phone: Optional[float] = None
     firstName: Optional[str] = None
     middleName: Optional[str] = None
     lastName: Optional[str] = None
