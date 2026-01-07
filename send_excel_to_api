@@ -9,8 +9,8 @@ from typing import List, Optional
 # --------------------------------
 EXCEL_FILE = "test_students.xlsx"
 
-API_URL = "http://127.0.0.1:8000/api/students/push/ulima"
-API_KEY = "dev-push-keyxxxxx"
+API_URL = "https://integracion-instituciones-myworkin-1-0-izpg.onrender.com/api/students/push/ulima"
+API_KEY = "super-secret-key-123"
 
 TIMEOUT = 15  # segundos
 
