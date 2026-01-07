@@ -4,6 +4,7 @@ from fastapi.params import Depends
 from app.core.limiter import limiter
 from app.config.di_student import get_student_by_id_use_case, register_student_use_case
 from app.delivery.schemas.student_ulima_dto import StudentULimaDTO
+from app.infrastructure.firebase.firebase_client import FirebaseUserAlreadyExists, FirebaseUserCreateError
 from app.infrastructure.mapper.student_ulima_mapper import ulima_to_domain
 from app.config.di_student import update_by_co_id_ps_use_case
 from app.core.config import require_api_key
@@ -90,15 +91,28 @@ async def upsert_ulima_student(
 
     # 2️⃣ CREATE
     uc_create = register_student_use_case()
-    uc_create.execute(student)
+    try:
+        uc_create.execute(student)
+
+    except FirebaseUserAlreadyExists:
+        return fail(
+            status=409,
+            code="AUTH_EMAIL_EXISTS",
+            message="El email ya existe en Firebase Auth"
+        )
+
+    except FirebaseUserCreateError as e:
+        return fail(
+            status=500,
+            code="AUTH_CREATE_ERROR",
+            message=str(e)
+        )
 
     return ok(
         status=201,
         result="created",
         message="Estudiante creado exitosamente",
-        data={
-            "coIdPs": student.coIdPs
-        }
+        data={"coIdPs": student.coIdPs}
     )
 
 

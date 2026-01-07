@@ -14,6 +14,14 @@ def get_firestore():
     return firestore.client()
 
 
+class FirebaseUserAlreadyExists(Exception):
+    pass
+
+
+class FirebaseUserCreateError(Exception):
+    pass
+
+
 def create_firebase_user(email: str, password: str, display_name: str | None = None):
     """
     Crea un usuario en Firebase Authentication usando Admin SDK
@@ -38,10 +46,10 @@ def create_firebase_user(email: str, password: str, display_name: str | None = N
         }
 
     except auth.EmailAlreadyExistsError:
-        raise ValueError("El email ya existe en Firebase Auth")
+        raise FirebaseUserAlreadyExists("El email ya existe en Firebase Auth")
 
     except Exception as e:
-        raise RuntimeError(f"Error creando usuario Firebase: {str(e)}")
+        raise FirebaseUserCreateError(str(e))
 
 
 # DESPLEGADO
