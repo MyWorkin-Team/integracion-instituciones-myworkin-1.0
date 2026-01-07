@@ -19,10 +19,10 @@ def init_firebase():
     if firebase_admin._apps:
         return
 
-    service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+    service_account_json = os.getenv("FIREBASE_SERVICE_ACCOUNT")
 
     if not service_account_json:
-        raise RuntimeError("FIREBASE_SERVICE_ACCOUNT_JSON not set")
+        raise RuntimeError("FIREBASE_SERVICE_ACCOUNT not set")
 
     cred_dict = json.loads(service_account_json)
 
