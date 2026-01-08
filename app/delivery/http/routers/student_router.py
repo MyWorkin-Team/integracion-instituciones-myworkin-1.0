@@ -15,43 +15,7 @@ from app.config.helpers import ok, fail
 from app.core.dto.api_response import ApiResponse, ApiError
 router = APIRouter()
 
-# -------------------------------------------------
-# ULIMA
-# -------------------------------------------------
-# @router.post("/push/ulima")
-# # @limiter.limit("1000/minute")
-# async def register_ulima_student(
-#     request: Request,
-#     body: StudentULimaDTO
-# ):
-#     try:
-#         uc = register_student_use_case()
-#         result = uc.execute(ulima_to_domain(body))
-#         return {"status": result}
 
-#     except Exception as e:
-#         import traceback
-#         traceback.print_exc()
-#         return {
-#             "error": str(e),
-#             "type": type(e).__name__
-#         }
-
-# @router.patch("/push/ulima/updated/{co_id_ps}", dependencies=[Depends(require_api_key)])
-# @limiter.limit("3000/minute")
-# async def update_ulima_student(co_id_ps: str, body: StudentULimaDTO):
-#     uc = update_by_co_id_ps_use_case()
-#     data = body.model_dump(exclude_unset=True)
-
-#     updated = uc.execute(co_id_ps, data)
-#     if not updated:
-#         raise HTTPException(status_code=404, detail="Student not found")
-
-#     return {
-#         "status": "success",
-#         "message": "Student updated successfully",
-#         "co_id_ps": co_id_ps
-#     }
 @router.post(
     "/push/ulima",
     dependencies=[Depends(require_api_key)],

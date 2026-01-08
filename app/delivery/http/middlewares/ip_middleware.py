@@ -20,7 +20,6 @@ class IPAndApiKeyMiddleware(BaseHTTPMiddleware):
         # 🔎 ¿Ruta protegida?
         is_protected = any(path.startswith(p) for p in PROTECTED_PATHS)
 
-
         if not is_protected:
             return await call_next(request)
 
@@ -31,20 +30,34 @@ class IPAndApiKeyMiddleware(BaseHTTPMiddleware):
 
 
         logger.warning(f"[SECURITY] Protected path | IP={client_ip}")
-
         # 🚫 IP no permitida
         if client_ip not in ALLOWED_IPS:
             return JSONResponse(
                 status_code=403,
-                content={"detail": "IP not allowed"}
+                content={
+                    "status": 403,
+                    "label": "Forbidden",
+                    "description": "IP no permitida",
+                    "body": {
+                        "error": "Forbidden",
+                        "message": "La IP desde la que se realiza la petición no está permitida."
+                    }
+                }
             )
-        
 
         # 🔐 API KEY inválida
         if not api_key or api_key != PUSH_API_KEY:
             return JSONResponse(
                 status_code=401,
-                content={"detail": "Invalid API Key"}
+                content={
+                    "status": 401,
+                    "label": "Unauthorized",
+                    "description": "API key inválida",
+                    "body": {
+                        "error": "Unauthorized",
+                        "message": "La API key es inválida o no fue enviada."
+                    }
+                }
             )
 
         # logger.info("[SECURITY] Access granted")

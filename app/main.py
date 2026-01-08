@@ -1,9 +1,11 @@
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
 from starlette.responses import JSONResponse
 import logging
 
+from app.core.dto.api_response import validation_exception_handler
 from app.core.limiter import limiter
 from app.delivery.http.middlewares.ip_middleware import IPAndApiKeyMiddleware
 
@@ -23,6 +25,11 @@ app = FastAPI(
     version="1.0.0"
 )
 
+app.add_exception_handler(
+    RequestValidationError,
+    validation_exception_handler
+)
+
 # 🔐 Middlewares
 app.add_middleware(IPAndApiKeyMiddleware)
 
@@ -34,9 +41,16 @@ app.add_middleware(SlowAPIMiddleware)
 async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
     return JSONResponse(
         status_code=429,
-        content={"detail": "Rate limit exceeded"}
+        content={
+            "status": 429,
+            "label": "Too Many Requests",
+            "description": "Rate limit excedido",
+            "body": {
+                "error": "Too Many Requests",
+                "message": "Has excedido el límite de peticiones permitidas. Intenta nuevamente más tarde."
+            }
+        }
     )
-
 # 🔌 Routers
 app.include_router(student_router, prefix="/api/students", tags=["Students"])
 app.include_router(test_router, prefix="/test", tags=["Test"])
