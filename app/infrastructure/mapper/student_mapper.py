@@ -1,9 +1,9 @@
 from app.domain.model.student import Student
-from app.delivery.schemas.student_ulima_dto import StudentULimaDTO
+from app.delivery.schemas.student_dto import StudentDTO
 from app.config.helpers import date_to_datetime
 
 
-def ulima_to_domain(dto: StudentULimaDTO) -> Student:
+def student_to_domain(dto: StudentDTO) -> Student:
     """
     Mapea DTO de estudiante a modelo de dominio.
     Soporta tanto formato nuevo (simplificado) como formato antiguo (backward compatibility).
@@ -118,7 +118,6 @@ def ulima_to_domain(dto: StudentULimaDTO) -> Student:
 
         # === RESPONSE ===
         id=data.get("id"),
-        uid=data.get("uid"),
         displayName=display_name,
         createdAt=date_to_datetime(data.get("createdAt")),
         updatedAt=date_to_datetime(data.get("updatedAt")),

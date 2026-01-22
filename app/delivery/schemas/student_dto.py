@@ -3,7 +3,7 @@ from datetime import date, datetime
 from pydantic import BaseModel, EmailStr, ConfigDict
 
 
-class StudentULimaDTO(BaseModel):
+class StudentDTO(BaseModel):
     """
     DTO simplificado para estudiantes ULima.
     Reducido de 59+ campos a 28 campos core.
@@ -45,7 +45,6 @@ class StudentULimaDTO(BaseModel):
 
     # === RESPONSE (5 campos - solo lectura) ===
     id: Optional[str] = None
-    uid: Optional[str] = None
     displayName: Optional[str] = None
     createdAt: Optional[datetime] = None
     updatedAt: Optional[datetime] = None

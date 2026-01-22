@@ -1,8 +1,8 @@
 from app.domain.model.employer import Employer
-from app.delivery.schemas.employer_ulima_dto import EmployerULimaDTO
+from app.delivery.schemas.employer_dto import EmployerDTO
 
 
-def ulima_employer_to_domain(body: EmployerULimaDTO) -> Employer:
+def employer_to_domain(body: EmployerDTO) -> Employer:
     """
     Mapea DTO de empresa a modelo de dominio.
     Soporta tanto formato nuevo (simplificado) como formato antiguo (backward compatibility).

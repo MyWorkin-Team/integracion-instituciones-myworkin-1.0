@@ -6,9 +6,9 @@ from app.config.di_student import get_student_by_id_use_case
 from app.core.limiter import limiter
 from app.core.config import require_api_key
 
-from app.delivery.schemas.employer_ulima_dto import EmployerULimaDTO
+from app.delivery.schemas.employer_dto import EmployerDTO
 from app.config.di_employer import get_employer_by_tax_id_use_case, update_by_tax_id_use_case, register_employer_use_case
-from app.infrastructure.mapper.employer_ulima_mapper import ulima_employer_to_domain
+from app.infrastructure.mapper.employer_mapper import employer_to_domain
 
 from app.config.helpers import ok, fail
 from app.core.dto.api_response import ApiResponse
@@ -25,11 +25,11 @@ router = APIRouter()
     response_model=ApiResponse[dict]
 )
 @limiter.limit("3000/minute")
-async def upsert_ulima_employer(
+async def upsert_employer(
     request: Request,
-    body: EmployerULimaDTO
+    body: EmployerDTO
 ):
-    employer = ulima_employer_to_domain(body)
+    employer = employer_to_domain(body)
 
     if not employer.taxId:
         response = fail(
@@ -76,8 +76,7 @@ async def upsert_ulima_employer(
     "/pull/ulima/{tax_id}",
     response_model=ApiResponse[dict]
 )
-async def pull_ulima_employer(tax_id: str):
-
+async def pull_employer(tax_id: str):
     uc = get_employer_by_tax_id_use_case()
     employer = uc.execute(tax_id)
 

@@ -3,11 +3,11 @@ from fastapi.params import Depends
 
 from app.core.limiter import limiter
 from app.config.di_student import get_student_by_id_use_case, register_student_use_case
-from app.delivery.schemas.student_ulima_dto import StudentULimaDTO
+from app.delivery.schemas.student_dto import StudentDTO
 from app.infrastructure.firebase.firebase_client import FirebaseUserAlreadyExists, FirebaseUserCreateError
-from app.infrastructure.mapper.student_ulima_mapper import ulima_to_domain
 from app.config.di_student import update_by_co_id_ps_use_case
 from app.core.config import require_api_key
+from app.infrastructure.mapper.student_mapper import student_to_domain
 
 from fastapi.responses import JSONResponse
 from app.core.errors.api_errors import ApiErrorCode
@@ -22,11 +22,11 @@ router = APIRouter()
     response_model=ApiResponse[dict]
 )
 @limiter.limit("3000/minute")
-async def upsert_ulima_student(
+async def upsert_student(
     request: Request,
-    body: StudentULimaDTO
+    body: StudentDTO
 ):
-    student = ulima_to_domain(body)
+    student = student_to_domain(body)
 
     # 🔴 Validación
     if not student.coIdPs:

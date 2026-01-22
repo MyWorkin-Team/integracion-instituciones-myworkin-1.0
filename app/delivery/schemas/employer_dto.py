@@ -3,7 +3,7 @@ from typing import Optional
 from datetime import datetime
 
 
-class EmployerULimaDTO(BaseModel):
+class EmployerDTO(BaseModel):
     """
     DTO simplificado para empresas ULima.
     Reducido de 15 a 12 campos core.

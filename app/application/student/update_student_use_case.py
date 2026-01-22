@@ -16,7 +16,6 @@ class UpdateStudentByCoIdPsUseCase:
             return False
 
         firebase_uid = existing.get("uid")
-        print("Firebase UID found:", firebase_uid)
 
         if not firebase_uid:
             raise RuntimeError(
