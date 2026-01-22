@@ -1,12 +1,14 @@
 from app.domain.port.student_repository_port import StudentRepositoryPort
 from app.domain.model.student import Student
 from google.cloud.firestore import FieldFilter
-
+from firebase_admin import firestore
 class StudentRepositoryAdapter(StudentRepositoryPort):
 
-    def __init__(self, client):
-        self.client = client
-        self.collection = client.collection("users")  # ✅ CLAVE
+    def __init__(self, app):
+        self.app = app 
+        # Ahora firestore.client(app=app) funcionará correctamente
+        self.client = firestore.client(app=app)
+        self.collection = self.client.collection("users")
 
     def save(self, student: Student) -> str:
         ref = self.collection.document(student.id)

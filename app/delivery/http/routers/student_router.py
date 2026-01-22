@@ -13,18 +13,29 @@ from fastapi.responses import JSONResponse
 from app.core.errors.api_errors import ApiErrorCode
 from app.config.helpers import ok, fail
 from app.core.dto.api_response import ApiResponse, ApiError
+
+from fastapi import Path
+from app.config.di_student import get_student_by_id_use_case
+from app.application.student.get_student_by_id_use_case import GetStudentByIdUseCase
+from fastapi.params import Depends  
+from app.application.student.update_student_use_case import UpdateStudentByCoIdPsUseCase
+from app.application.student.register_student_use_case import RegisterStudentUseCase
+
 router = APIRouter()
 
 
 @router.post(
-    "/push/ulima",
+    "/push/{university_id}",
     dependencies=[Depends(require_api_key)],
     response_model=ApiResponse[dict]
 )
 @limiter.limit("3000/minute")
 async def upsert_student(
     request: Request,
-    body: StudentDTO
+    body: StudentDTO,
+    # ⬇️ INYECCIÓN DE DEPENDENCIAS AQUÍ ⬇️
+    uc_update: UpdateStudentByCoIdPsUseCase = Depends(update_by_co_id_ps_use_case),
+    uc_create: RegisterStudentUseCase = Depends(register_student_use_case)
 ):
     student = student_to_domain(body)
 
@@ -36,24 +47,18 @@ async def upsert_student(
             message="coIdPs is required for upsert"
         )
 
-    # 1️⃣ UPDATE
-    uc_update = update_by_co_id_ps_use_case()
-    updated = uc_update.execute(
-        student
-    )
+    # 1️⃣ UPDATE (Ya no llamas a la función, usas el parámetro uc_update)
+    updated = uc_update.execute(student)
 
     if updated:
         return ok(
             status=200,
             result="updated",
             message="Estudiante actualizado exitosamente",
-            data={
-                "coIdPs": student.coIdPs
-            }
+            data={"coIdPs": student.coIdPs}
         )
 
-    # 2️⃣ CREATE
-    uc_create = register_student_use_case()
+    # 2️⃣ CREATE (Usas el parámetro uc_create inyectado)
     try:
         uc_create.execute(student)
 
@@ -63,7 +68,6 @@ async def upsert_student(
             code="AUTH_EMAIL_EXISTS",
             message="El email ya existe en Firebase Auth"
         )
-
     except FirebaseUserCreateError as e:
         return fail(
             status=500,
@@ -79,7 +83,6 @@ async def upsert_student(
     )
 
 
-
 @router.get("/ulima")
 async def test_route():
     return {
@@ -89,12 +92,14 @@ async def test_route():
 
 
 @router.get(
-    "/pull/ulima/{student_id}",
+    "/pull/{university_id}/{student_id}",
     response_model=ApiResponse[dict]
 )
-async def pull_ulima_student(student_id: str):
-    print("🔔 Pull ULima Student:", student_id)
-    uc = get_student_by_id_use_case()
+async def pull_ulima_student(
+    student_id: str,
+    university_id: str = Path(...),
+    uc: GetStudentByIdUseCase = Depends(get_student_by_id_use_case)
+):
     student = uc.execute(student_id)
 
     if not student:

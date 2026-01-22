@@ -11,6 +11,7 @@ class RegisterStudentUseCase:
     def execute(self, student: Student):
         # 1️⃣ Crear usuario en Firebase Auth
         firebase_user = create_firebase_user(
+            app=self.repo.app,
             email=student.email,
             password=student.coIdPs,
             display_name=student.displayName
