@@ -1,40 +1,39 @@
 from dataclasses import dataclass, asdict
-from typing import Optional, List, Dict, Any
+from typing import Optional
 from datetime import datetime
-from pydantic import BaseModel
 
 
 @dataclass
 class Employer:
-    # Identidad
-    id: Optional[str] = None
-    label: Optional[str] = None
+    """
+    Modelo de dominio simplificado para empresas.
+    Reducido de 15 a 12 campos core.
+    """
+
+    # === IDENTIDAD (5 campos) ===
     name: Optional[str] = None
-    alias: Optional[str] = None
-
-    # Identificadores externos / legales
-    importedId: Optional[str] = None
+    displayName: Optional[str] = None
+    logo: Optional[str] = None
     taxId: Optional[str] = None  # RUC
+    importedId: Optional[str] = None
 
-    # Información general
+    # === INFORMACION (4 campos) ===
     description: Optional[str] = None
-    overview: Optional[str] = None
     website: Optional[str] = None
+    contactEmail: Optional[str] = None
+    phone: Optional[str] = None
 
-    # Relaciones (estructuras simples)
-    industries: Optional[List[Dict[str, Any]]] = None
-    primaryContact: Optional[Dict[str, Any]] = None
-    accountManager: Optional[Dict[str, Any]] = None
-    parent: Optional[Dict[str, Any]] = None
+    # === CLASIFICACION (3 campos) ===
+    sector: Optional[str] = None
+    companySize: Optional[str] = None
+    status: Optional[str] = None
 
-    # Dirección
-    address: Optional[Dict[str, Any]] = None
+    # === RESPONSE (solo lectura) ===
+    id: Optional[str] = None
+    createdAt: Optional[datetime] = None
+    updatedAt: Optional[datetime] = None
 
-    # Metadatos
-    lastModified: Optional[datetime] = None
-
-    # 🔥 CLAVE
     def to_firestore_dict(self) -> dict:
+        """Convierte a diccionario para Firestore, excluyendo valores None."""
         data = asdict(self)
         return {k: v for k, v in data.items() if v is not None}
-    

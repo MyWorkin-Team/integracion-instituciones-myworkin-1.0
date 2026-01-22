@@ -1,3 +1,11 @@
+import sys
+from pathlib import Path
+
+# Agregar el directorio raíz del proyecto al PYTHONPATH
+project_root = Path(__file__).parent.parent
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from slowapi.middleware import SlowAPIMiddleware
@@ -56,3 +64,7 @@ app.include_router(student_router, prefix="/api/students", tags=["Students"])
 app.include_router(test_router, prefix="/test", tags=["Test"])
 app.include_router(employer_router, prefix="/api/employers", tags=["Employers"])
 app.include_router(health_router, tags=["Health"])
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

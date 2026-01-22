@@ -1,79 +1,54 @@
-from typing import Optional, List, Dict
-from datetime import date
+from typing import Optional
+from datetime import date, datetime
 from pydantic import BaseModel, EmailStr, ConfigDict
 
+
 class StudentULimaDTO(BaseModel):
-    # 🔑 Identidad
-    id: Optional[str] = None
-    firstName: Optional[str] = None
-    middleName: Optional[str] = None
-    lastName: Optional[str] = None
-    secondLastName: Optional[str] = None
-    fullName: Optional[str] = None
-    image: Optional[str] = None
+    """
+    DTO simplificado para estudiantes ULima.
+    Reducido de 59+ campos a 28 campos core.
+    """
 
-    birthdate: Optional[date] = None
-    gender: Optional[str] = None
-    discapacidad: Optional[bool] = None
-    alumni: Optional[bool] = None
-
-    # 🪪 Documento
-    tipoDocumento: Optional[str] = None
-    numeroDocumento: Optional[str] = None
-    paisEmisionDocumento: Optional[str] = None
-    schoolStudentId: Optional[str] = None
-    coPers: Optional[str] = None
-    coIdPs: Optional[str] = None
-
-    # 📍 Dirección / contacto
-    street: Optional[str] = None
-    city: Optional[str] = None
-    dependentLocality: Optional[str] = None
-    state: Optional[str] = None
-    zip: Optional[str] = None
-    country: Optional[str] = None
-
+    # === CORE (15 campos) ===
+    # Identidad basica
     email: Optional[EmailStr] = None
-    emailUniversity: Optional[EmailStr] = None
-    emailAlternativo: Optional[EmailStr] = None
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
     phone: Optional[str] = None
-    telefonoAlternativo: Optional[str] = None
+    photoURL: Optional[str] = None
+    location: Optional[str] = None
 
-    # 💼 Laboral
-    situacionLaboral: Optional[str] = None
-    interesesLaborales: Optional[List[str]] = None
+    # Academico
+    university: Optional[str] = None
+    carrera: Optional[str] = None
+    studentStatus: Optional[str] = None  # "Estudiante" | "Egresado"
 
-    # 🎓 Académico
-    applicantType: Optional[str] = None
+    # Sistema
+    role: Optional[str] = None
+    status: Optional[str] = None
+    emailVerified: Optional[bool] = None
+
+    # Identificadores
+    schoolStudentId: Optional[str] = None
+    coIdPs: Optional[str] = None  # REQUERIDO para push
+    numeroDocumento: Optional[str] = None
+
+    # === ULIMA INTEGRATION (8 campos) ===
+    coPers: Optional[str] = None
+    tipoDocumento: Optional[str] = None
+    paisEmisionDocumento: Optional[str] = None
     degreeLevel: Optional[str] = None
-    degreeMode: Optional[str] = None
-    degreeAward: Optional[str] = None
-    degreeYear: Optional[str] = None
-    degreePrimary: Optional[bool] = None
-    degree: Optional[str] = None
-    subjectArea: Optional[str] = None
-    institucionEducacionSuperior: Optional[str] = None
-    rankingUlima: Optional[str] = None
     ppa: Optional[str] = None
     cicloUltimaMatricula: Optional[str] = None
-    creditosAprobados: Optional[str] = None
-    creditosMatriculados: Optional[str] = None
     fechaEgreso: Optional[date] = None
+    alumni: Optional[bool] = None
 
-    # 🎓 Formación adicional
-    tienesColegiatura: Optional[bool] = None
-    tienesMaestria: Optional[bool] = None
-    tienesMaestriaExternaUl: Optional[bool] = None
+    # === RESPONSE (5 campos - solo lectura) ===
+    id: Optional[str] = None
+    uid: Optional[str] = None
+    displayName: Optional[str] = None
+    createdAt: Optional[datetime] = None
+    updatedAt: Optional[datetime] = None
 
-    # 🌍 Idiomas
-    languages: Optional[List[str]] = None
-
-    # ⚙️ Preferencias
-    receiveJobBlastEmail: Optional[bool] = None
-    experientialLearning: Optional[bool] = None
-
-    # 🔐 Derechos
-    rights: Optional[Dict[str, bool]] = None
-
-    # ⭐ CLAVE
+    # Permite campos extra para backward compatibility con formato antiguo
     model_config = ConfigDict(extra="allow")

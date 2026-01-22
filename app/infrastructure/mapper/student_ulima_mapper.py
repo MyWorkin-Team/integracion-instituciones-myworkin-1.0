@@ -2,102 +2,124 @@ from app.domain.model.student import Student
 from app.delivery.schemas.student_ulima_dto import StudentULimaDTO
 from app.config.helpers import date_to_datetime
 
+
 def ulima_to_domain(dto: StudentULimaDTO) -> Student:
+    """
+    Mapea DTO de estudiante a modelo de dominio.
+    Soporta tanto formato nuevo (simplificado) como formato antiguo (backward compatibility).
+    """
     data = dto.model_dump()
 
-    full_name_parts = [
-        data.get("firstName"),
-        data.get("middleName"),
-        data.get("lastName"),
-        data.get("secondLastName"),
-    ]
-    fullName = " ".join([p for p in full_name_parts if p])
+    # === BACKWARD COMPATIBILITY: Mapeo de campos antiguos ===
 
-    rights = data.get("rights") or {}
+    # image -> photoURL
+    photo_url = data.get("photoURL") or data.get("image")
 
+    # degree -> carrera
+    carrera = data.get("carrera") or data.get("degree")
+
+    # verified -> emailVerified
+    email_verified = data.get("emailVerified")
+    if email_verified is None:
+        email_verified = data.get("verified", False)
+
+    # alumni -> studentStatus
+    student_status = data.get("studentStatus")
+    if student_status is None:
+        alumni = data.get("alumni")
+        if alumni is True:
+            student_status = "Egresado"
+        elif alumni is False:
+            student_status = "Estudiante"
+
+    # Calcular displayName automaticamente si no viene
+    display_name = data.get("displayName")
+    if not display_name:
+        name_parts = [data.get("firstName"), data.get("lastName")]
+        display_name = " ".join([p for p in name_parts if p]) or None
+
+    # location: construir desde campos antiguos si no viene
+    location = data.get("location")
+    if not location:
+        city = data.get("city")
+        country = data.get("country")
+        if city and country:
+            location = f"{city}, {country}"
+        elif city:
+            location = city
+        elif country:
+            location = country
+
+    # degreeLevel: buscar en academic si no viene directamente
+    degree_level = data.get("degreeLevel")
+    if not degree_level and isinstance(data.get("academic"), dict):
+        degree_level = data["academic"].get("degreeLevel")
+
+    # ppa: buscar en academic si no viene directamente
+    ppa = data.get("ppa")
+    if not ppa and isinstance(data.get("academic"), dict):
+        ppa = data["academic"].get("ppa")
+
+    # cicloUltimaMatricula: buscar en academic si no viene directamente
+    ciclo = data.get("cicloUltimaMatricula")
+    if not ciclo and isinstance(data.get("academic"), dict):
+        ciclo = data["academic"].get("cicloUltimaMatricula")
+
+    # fechaEgreso: buscar en academic si no viene directamente
+    fecha_egreso = data.get("fechaEgreso")
+    if not fecha_egreso and isinstance(data.get("academic"), dict):
+        fecha_egreso = data["academic"].get("fechaEgreso")
+
+    # tipoDocumento: buscar en document si no viene directamente
+    tipo_doc = data.get("tipoDocumento")
+    if not tipo_doc and isinstance(data.get("document"), dict):
+        tipo_doc = data["document"].get("tipoDocumento")
+
+    # numeroDocumento: buscar en document si no viene directamente
+    numero_doc = data.get("numeroDocumento")
+    if not numero_doc and isinstance(data.get("document"), dict):
+        numero_doc = data["document"].get("numeroDocumento")
+
+    # paisEmisionDocumento: buscar en document si no viene directamente
+    pais_doc = data.get("paisEmisionDocumento")
+    if not pais_doc and isinstance(data.get("document"), dict):
+        pais_doc = data["document"].get("paisEmisionDocumento")
 
     return Student(
-        # Identidad
-        id=data.get("id"),
-        displayName=data.get("displayName"),
+        # === CORE ===
         email=data.get("email"),
-        phone=data.get("phone"),
         firstName=data.get("firstName"),
-        middleName=data.get("middleName"),
         lastName=data.get("lastName"),
-        secondLastName=data.get("secondLastName"),
-        fullName=fullName,
-        image=data.get("image"),
-        # birthdate=data.get("birthdate"),
-        gender=data.get("gender"),
-        discapacidad=data.get("discapacidad"),
-        alumni=data.get("alumni"),
+        phone=data.get("phone"),
+        photoURL=photo_url,
+        location=location,
 
-        # Estado
+        university=data.get("university"),
+        carrera=carrera,
+        studentStatus=student_status,
+
         role=data.get("role") or "student",
         status=data.get("status") or "active",
-        university=data.get("university"),
-        verified=data.get("verified", False),
-        hasCV=data.get("hasCV", False),
-        usoPrimerHerramienta=data.get("usoPrimerHerramienta", False),
+        emailVerified=email_verified,
 
-        # Fechas
-        birthdate=date_to_datetime(data.get("birthdate")),
+        schoolStudentId=data.get("schoolStudentId"),
+        coIdPs=data.get("coIdPs"),
+        numeroDocumento=numero_doc,
+
+        # === ULIMA INTEGRATION ===
+        coPers=data.get("coPers"),
+        tipoDocumento=tipo_doc,
+        paisEmisionDocumento=pais_doc,
+        degreeLevel=degree_level,
+        ppa=ppa,
+        cicloUltimaMatricula=ciclo,
+        fechaEgreso=date_to_datetime(fecha_egreso),
+        alumni=data.get("alumni"),
+
+        # === RESPONSE ===
+        id=data.get("id"),
+        uid=data.get("uid"),
+        displayName=display_name,
         createdAt=date_to_datetime(data.get("createdAt")),
         updatedAt=date_to_datetime(data.get("updatedAt")),
-
-        # Identificadores
-        schoolStudentId=data.get("schoolStudentId"),
-        coPers=data.get("coPers"),
-        coIdPs=data.get("coIdPs"),
-
-        # Documentos
-        tipoDocumento=data.get("document", {}).get("tipoDocumento"),
-        numeroDocumento=data.get("document", {}).get("numeroDocumento"),
-        paisEmisionDocumento=data.get("document", {}).get("paisEmisionDocumento"),
-
-        # Dirección
-        street=data.get("address", {}).get("street"),
-        city=data.get("address", {}).get("city"),
-        dependentLocality=data.get("address", {}).get("dependentLocality"),
-        state=data.get("address", {}).get("state"),
-        zip=data.get("address", {}).get("zip"),
-        country=data.get("address", {}).get("country"),
-
-        # Académico
-        applicantType=data.get("academic", {}).get("applicantType"),
-        degreeLevel=data.get("academic", {}).get("degreeLevel"),
-        degreeMode=data.get("academic", {}).get("degreeMode"),
-        degreeAward=data.get("academic", {}).get("degreeAward"),
-        degreeYear=data.get("academic", {}).get("degreeYear"),
-        degreePrimary=data.get("academic", {}).get("degreePrimary"),
-        degree=data.get("academic", {}).get("degree"),
-        subjectArea=data.get("academic", {}).get("subjectArea"),
-        institucionEducacionSuperior=data.get("academic", {}).get("institucionEducacionSuperior"),
-        rankingUlima=data.get("academic", {}).get("rankingUlima"),
-        ppa=data.get("academic", {}).get("ppa"),
-        cicloUltimaMatricula=data.get("academic", {}).get("cicloUltimaMatricula"),
-        creditosAprobados=data.get("academic", {}).get("creditosAprobados"),
-        creditosMatriculados=data.get("academic", {}).get("creditosMatriculados"),
-        fechaEgreso=data.get("academic", {}).get("fechaEgreso"),
-
-        # Estudios
-        tienesColegiatura=data.get("studies", {}).get("tienesColegiatura"),
-        tienesMaestria=data.get("studies", {}).get("tienesMaestria"),
-        tienesMaestriaExternaUl=data.get("studies", {}).get("tienesMaestriaExternaUl"),
-
-        # Preferencias
-        languages=data.get("preferences", {}).get("languages"),
-        receiveJobBlastEmail=data.get("preferences", {}).get("receiveJobBlastEmail"),
-        experientialLearning=data.get("preferences", {}).get("experientialLearning"),
-
-        # Derechos
-        canApplyJobs = rights.get("canApplyJobs"),
-        canDownloadCertificates = rights.get("canDownloadCertificates"),
-        canEditProfile = rights.get("canEditProfile"),
-
-
-        # Laboral
-        situacionLaboral=data.get("situacionLaboral"),
-        interesesLaborales=data.get("interesesLaborales") or []
     )

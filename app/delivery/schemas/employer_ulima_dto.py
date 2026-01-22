@@ -1,55 +1,36 @@
-from pydantic import BaseModel, Field, HttpUrl
-from typing import Optional, List, Dict
+from pydantic import BaseModel, HttpUrl, ConfigDict
+from typing import Optional
 from datetime import datetime
 
 
 class EmployerULimaDTO(BaseModel):
-    # Identidad
-    id: Optional[str] = None
-    label: Optional[str] = None
+    """
+    DTO simplificado para empresas ULima.
+    Reducido de 15 a 12 campos core.
+    """
+
+    # === IDENTIDAD (5 campos) ===
     name: Optional[str] = None
-    alias: Optional[str] = None
-
-    # Identificadores externos / legales
+    displayName: Optional[str] = None
+    logo: Optional[str] = None
+    taxId: Optional[str] = None  # RUC (11 digitos)
     importedId: Optional[str] = None
-    taxId: Optional[str] = Field(
-        default=None,
-        description="RUC de la empresa (11 dígitos)"
-    )
 
-    # Información general
+    # === INFORMACION (4 campos) ===
     description: Optional[str] = None
-    overview: Optional[str] = None
     website: Optional[HttpUrl] = None
+    contactEmail: Optional[str] = None
+    phone: Optional[str] = None
 
-    # Relaciones (estructura flexible, sin sub-modelos)
-    industries: Optional[List[Dict]] = None
-    primaryContact: Optional[Dict] = None
-    accountManager: Optional[Dict] = None
-    parent: Optional[Dict] = None
+    # === CLASIFICACION (3 campos) ===
+    sector: Optional[str] = None
+    companySize: Optional[str] = None
+    status: Optional[str] = None
 
-    # Dirección
-    address: Optional[Dict] = None
+    # === RESPONSE (solo lectura) ===
+    id: Optional[str] = None
+    createdAt: Optional[datetime] = None
+    updatedAt: Optional[datetime] = None
 
-    # Metadatos
-    lastModified: Optional[datetime] = None
-
-    # class Config:
-    #     extra = "ignore"
-    #     json_schema_extra = {
-    #         "example": {
-    #             "label": "ALICORP SAA",
-    #             "name": "ALICORP SAA",
-    #             "alias": "ALICORP SAA",
-    #             "taxId": "20100055237",
-    #             "website": "http://www.alicorp.com.pe/alicorp/index.html",
-    #             "industries": [
-    #                 {"id": "298", "label": "INDUSTRIAS MANUFACTURERAS"}
-    #             ],
-    #             "primaryContact": {
-    #                 "id": "91528f6a479cdded8b25ec7670b28b04",
-    #                 "label": "GABRIELA MATTO MUNDACA",
-    #                 "link": "/api/public/v1/contacts/91528f6a479cdded8b25ec7670b28b04"
-    #             }
-    #         }
-    #     }
+    # Permite campos extra para backward compatibility
+    model_config = ConfigDict(extra="allow")
