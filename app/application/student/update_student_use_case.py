@@ -21,7 +21,6 @@ class UpdateStudentByCoIdPsUseCase:
             raise RuntimeError(
                 "Usuario existe en Firestore pero no tiene firebase_uid"
             )
-
         # ✅ CORRECCIÓN: Pasamos self.repo.app como primer argumento
         update_firebase_auth_user(
             app=self.repo.app,         # <--- Se requiere para saber qué universidad es

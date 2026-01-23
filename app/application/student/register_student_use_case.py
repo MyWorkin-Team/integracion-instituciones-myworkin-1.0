@@ -18,6 +18,7 @@ class RegisterStudentUseCase:
         )
         
         student.uid = firebase_user["uid"]
+        student.createdFrom = 'admin'
         # 2️⃣ Set timestamps
         student.created_at = datetime.now(timezone.utc).isoformat()
 

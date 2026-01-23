@@ -48,6 +48,7 @@ class Student:
     id: Optional[str] = None
     uid: Optional[str] = None
     displayName: Optional[str] = None
+    createdFrom: Optional[str] = None
     createdAt: Optional[datetime] = None
     updatedAt: Optional[datetime] = None
 
