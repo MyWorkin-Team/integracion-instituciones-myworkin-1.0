@@ -79,7 +79,7 @@ def create_firebase_user(
             email=email,
             password=password,
             display_name=display_name,
-            email_verified=False,
+            email_verified=True,
             disabled=False,
             app=app  # <--- CLAVE: Usa el proyecto correcto
         )

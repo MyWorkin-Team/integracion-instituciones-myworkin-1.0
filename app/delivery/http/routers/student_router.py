@@ -34,6 +34,7 @@ async def upsert_student(
     request: Request,
     body: StudentDTO,
     # ⬇️ INYECCIÓN DE DEPENDENCIAS AQUÍ ⬇️
+    university_id: str = Path(...),
     uc_update: UpdateStudentByCoIdPsUseCase = Depends(update_by_co_id_ps_use_case),
     uc_create: RegisterStudentUseCase = Depends(register_student_use_case)
 ):
@@ -83,19 +84,11 @@ async def upsert_student(
     )
 
 
-@router.get("/ulima")
-async def test_route():
-    return {
-        "status": "ok",
-        "message": "Te listo estudiantes de ulima"
-    }
-
-
 @router.get(
     "/pull/{university_id}/{student_id}",
     response_model=ApiResponse[dict]
 )
-async def pull_ulima_student(
+async def pull_student(
     student_id: str,
     university_id: str = Path(...),
     uc: GetStudentByIdUseCase = Depends(get_student_by_id_use_case)

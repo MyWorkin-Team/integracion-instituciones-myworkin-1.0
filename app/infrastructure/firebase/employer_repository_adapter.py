@@ -1,13 +1,15 @@
 from app.domain.port.employer_repository_port import EmployerRepositoryPort
 from app.domain.model.employer import Employer
 from google.cloud.firestore import FieldFilter
-
+from firebase_admin import firestore
 
 class EmployerRepositoryAdapter(EmployerRepositoryPort):
 
-    def __init__(self, client):
-        self.client = client
-        self.collection = client.collection("employers")  # 🔑 colección employers
+    def __init__(self, app):
+        self.app = app 
+        # Ahora firestore.client(app=app) funcionará correctamente
+        self.client = firestore.client(app=app)
+        self.collection = self.client.collection("employers")
 
     # -------------------------------------------------
     # CREATE / SAVE (merge)
