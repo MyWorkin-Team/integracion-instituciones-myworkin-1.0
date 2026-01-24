@@ -68,20 +68,21 @@ def get_firestore(university_id: str):
 # Auth - CREATE
 # ------------------------------------
 def create_firebase_user(
-    app,  # <--- Recibe la APP ya inicializada
+    app,  # <--- APP ya inicializada
     email: str,
     password: str,
-    display_name: str | None = None
+    display_name: str | None = None,
+    uid: str | None = None,   # 👈 NUEVO
 ):
     try:
-        # Usamos auth.create_user especificando la APP
         user = auth.create_user(
+            uid=uid,   # 👈 CLAVE: Forzamos UID si existe
             email=email,
             password=password,
             display_name=display_name,
             email_verified=True,
             disabled=False,
-            app=app  # <--- CLAVE: Usa el proyecto correcto
+            app=app
         )
 
         return {
@@ -91,8 +92,11 @@ def create_firebase_user(
 
     except auth.EmailAlreadyExistsError:
         raise FirebaseUserAlreadyExists("El email ya está registrado")
+    except auth.UidAlreadyExistsError:
+        raise FirebaseUserAlreadyExists("El UID ya existe en Firebase")
     except Exception as e:
         raise FirebaseUserCreateError(str(e))
+
 
 # --------------------------------------------------
 # Auth - UPDATE

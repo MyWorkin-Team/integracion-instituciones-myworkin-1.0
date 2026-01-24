@@ -5,7 +5,7 @@ from app.domain.model.student import Student
 class StudentRepositoryPort(ABC):
 
     @abstractmethod
-    def save(self, student: Student) -> str:
+    def save_with_id(self, uid: str, student: Student) -> str:
         """Return created or updated"""
         pass
 

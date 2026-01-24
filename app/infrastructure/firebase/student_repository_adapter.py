@@ -10,8 +10,8 @@ class StudentRepositoryAdapter(StudentRepositoryPort):
         self.client = firestore.client(app=app)
         self.collection = self.client.collection("users")
 
-    def save(self, student: Student) -> str:
-        ref = self.collection.document(student.id)
+    def save_with_id(self, uid: str, student: Student) -> str:
+        ref = self.collection.document(uid)
         exists = ref.get().exists
         ref.set(student.__dict__, merge=True)
         return "updated" if exists else "created"
