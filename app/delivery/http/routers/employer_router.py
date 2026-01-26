@@ -36,7 +36,6 @@ async def upsert_employer(
 ):
     employer = employer_to_domain(body)
 
-    print("employer taxId:", employer.taxId) # Debug
     
     # 🔴 Validación Correcta
     if employer.taxId is None or employer.taxId == "":

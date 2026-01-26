@@ -119,6 +119,6 @@ def student_to_domain(dto: StudentDTO) -> Student:
         # === RESPONSE ===
         id=data.get("id"),
         displayName=display_name,
-        createdAt=date_to_datetime(data.get("createdAt")),
-        updatedAt=date_to_datetime(data.get("updatedAt")),
+        created_at=date_to_datetime(data.get("created_at")),
+        updated_at=date_to_datetime(data.get("updated_at")),
     )

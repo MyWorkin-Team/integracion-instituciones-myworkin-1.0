@@ -30,8 +30,8 @@ class Employer:
 
     # === RESPONSE (solo lectura) ===
     id: Optional[str] = None
-    createdAt: Optional[datetime] = None
-    updatedAt: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     def to_firestore_dict(self) -> dict:
         """Convierte a diccionario para Firestore, excluyendo valores None."""

@@ -29,8 +29,8 @@ class EmployerDTO(BaseModel):
 
     # === RESPONSE (solo lectura) ===
     id: Optional[str] = None
-    createdAt: Optional[datetime] = None
-    updatedAt: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     # Permite campos extra para backward compatibility
     model_config = ConfigDict(extra="allow")

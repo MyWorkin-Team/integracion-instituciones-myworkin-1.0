@@ -106,5 +106,6 @@ async def pull_student(
 
     return ok(
         student,
+        result="fetched",
         message="Estudiante obtenido correctamente"
     )

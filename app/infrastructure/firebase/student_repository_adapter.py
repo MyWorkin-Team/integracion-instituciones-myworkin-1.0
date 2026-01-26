@@ -31,7 +31,7 @@ class StudentRepositoryAdapter(StudentRepositoryPort):
         docs = list(docs)
         if not docs:
             return None
-
+        
         return docs[0].to_dict()
     
     

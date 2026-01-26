@@ -61,6 +61,6 @@ def employer_to_domain(body: EmployerDTO) -> Employer:
 
         # === RESPONSE ===
         id=data.get("id"),
-        createdAt=data.get("createdAt"),
-        updatedAt=data.get("updatedAt"),
+        created_at=data.get("created_at"),
+        updated_at=data.get("updated_at"),
     )

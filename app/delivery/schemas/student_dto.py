@@ -46,8 +46,8 @@ class StudentDTO(BaseModel):
     # === RESPONSE (5 campos - solo lectura) ===
     id: Optional[str] = None
     displayName: Optional[str] = None
-    createdAt: Optional[datetime] = None
-    updatedAt: Optional[datetime] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     # Permite campos extra para backward compatibility con formato antiguo
     model_config = ConfigDict(extra="allow")
