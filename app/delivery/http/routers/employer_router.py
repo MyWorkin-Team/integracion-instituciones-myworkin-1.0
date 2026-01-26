@@ -17,12 +17,13 @@ from fastapi.params import Path
 from app.core.errors.api_errors import ApiErrorCode
 from app.config.di_employer import get_employer_by_tax_id_use_case
 from app.application.employer.get_employer_by_tax_id_use_case import GetEmployerByTaxIdUseCase
+from app.core.dependencies import validate_university_id
 
 router = APIRouter()
 
 @router.post(
     "/push/{university_id}",
-    dependencies=[Depends(require_api_key)],
+    dependencies=[Depends(require_api_key), Depends(validate_university_id)],
     response_model=ApiResponse[dict]
 )
 @limiter.limit("3000/minute")
@@ -80,6 +81,7 @@ async def upsert_employer(
 
 @router.get(
     "/pull/{university_id}/{tax_id}",
+    dependencies=[Depends(validate_university_id)],
     response_model=ApiResponse[dict],
 )
 async def pull_employer(

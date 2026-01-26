@@ -54,6 +54,7 @@ def init_firebase(university_id: str):
         logger.error(f"Error al inicializar Firebase para {university_id}: {e}")
         raise
 
+
 def get_firestore(university_id: str):
     """
     Retorna el cliente de Firestore específico para una universidad.

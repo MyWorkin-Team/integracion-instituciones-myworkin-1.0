@@ -1,12 +1,14 @@
 import json
 from fastapi import Path, HTTPException
 from app.config.helpers import fail
+import os
 
 async def validate_university_id(university_id: str = Path(...)):
     # 1. Tu lista desde el ENV
     allowed = os.getenv("ALLOWED_UNIVERSITIES", "").split(",")
+    university_id_upper = university_id.upper()
     
-    if university_id not in allowed:
+    if university_id_upper not in allowed:
         # 2. Generas el error con TU función fail
         error_response = fail(
             code="INVALID_UNIVERSITY",

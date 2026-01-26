@@ -29,29 +29,32 @@ class ApiResponse(GenericModel, Generic[T]):
     error: Optional[ApiError] = None
 
 
+import json
+
 def ok(
-    data: T,
+    data: any = None,
     *,
-    message: str,
+    message: str = "Operación exitosa",
     result: Optional[str] = None,
     status: int = 200
 ) -> JSONResponse:
+    # 🔥 Serialización automática de Firestore/Fechas
+    safe_data = serialize_firestore(data) if data is not None else None
 
-    safe_data = serialize_firestore(data)  # 🔥 AUTOMÁTICO
-
-    response = ApiResponse[T](
+    response = ApiResponse(
         status=status,
         success=True,
         message=message,
         result=result,
-        data=safe_data
+        data=safe_data,
+        error=None  # Siempre presente como null
     )
 
     return JSONResponse(
         status_code=status,
-        content=response.model_dump(exclude_none=True)  
+        # Usamos model_dump() sin excluir nada para mantener la estructura fija
+        content=response.model_dump(exclude_none=True)
     )
-
 
 def fail(
     *,
@@ -59,17 +62,16 @@ def fail(
     message: str,
     status: int = 400
 ) -> JSONResponse:
-
     response = ApiResponse(
         status=status,
         success=False,
-        error=ApiError(
-            code=code,
-            message=message
-        )
+        message=message, # Mensaje general de error
+        result=None,
+        data=None,
+        error=ApiError(code=code, message=message)
     )
 
     return JSONResponse(
         status_code=status,
-        content=response.model_dump(exclude_none=True)  # 🔑
+        content=response.model_dump(exclude_none=True)
     )

@@ -20,13 +20,14 @@ from app.application.student.get_student_by_id_use_case import GetStudentByIdUse
 from fastapi.params import Depends  
 from app.application.student.update_student_use_case import UpdateStudentByCoIdPsUseCase
 from app.application.student.register_student_use_case import RegisterStudentUseCase
+from app.core.dependencies import validate_university_id
 
 router = APIRouter()
 
 
 @router.post(
     "/push/{university_id}",
-    dependencies=[Depends(require_api_key)],
+    dependencies=[Depends(require_api_key), Depends(validate_university_id)],
     response_model=ApiResponse[dict]
 )
 @limiter.limit("3000/minute")
@@ -86,6 +87,7 @@ async def upsert_student(
 
 @router.get(
     "/pull/{university_id}/{student_id}",
+    dependencies=[Depends(validate_university_id)],
     response_model=ApiResponse[dict]
 )
 async def pull_student(
