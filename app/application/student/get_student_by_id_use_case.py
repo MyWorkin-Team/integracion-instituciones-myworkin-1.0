@@ -7,5 +7,5 @@ class GetStudentByIdUseCase:
     def __init__(self, repo: StudentRepositoryPort):
         self.repo = repo
 
-    def execute(self,co_id_ps: str) -> Optional[Student]:
-        return self.repo.find_by_coIdPs(co_id_ps)
+    def execute(self, student_id: str) -> Optional[dict]:
+        return self.repo.find_by_id(student_id)

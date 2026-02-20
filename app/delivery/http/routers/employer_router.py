@@ -27,7 +27,7 @@ router = APIRouter()
     response_model=ApiResponse[dict]
 )
 @limiter.limit("3000/minute")
-async def upsert_employer(
+def upsert_employer(
     request: Request,
     body: EmployerDTO,
     university_id: str = Path(...),
@@ -83,7 +83,7 @@ async def upsert_employer(
     dependencies=[Depends(validate_university_id)],
     response_model=ApiResponse[dict],
 )
-async def pull_employer(
+def pull_employer(
     tax_id: str,
     university_id: str = Path(...),
     uc: GetEmployerByTaxIdUseCase = Depends(get_employer_by_tax_id_use_case)

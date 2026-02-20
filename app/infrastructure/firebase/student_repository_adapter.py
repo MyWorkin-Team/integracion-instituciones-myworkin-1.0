@@ -10,20 +10,20 @@ class StudentRepositoryAdapter(StudentRepositoryPort):
         self.client = firestore.client(app=app)
         self.collection = self.client.collection("users")
 
-    def save_with_id(self, uid: str, student: Student) -> str:
+    def save(self, uid: str, student: Student) -> str:
         ref = self.collection.document(uid)
         exists = ref.get().exists
-        ref.set(student.__dict__, merge=True)
+        ref.set(student.to_firestore_dict(), merge=True)
         return "updated" if exists else "created"
 
     def find_by_id(self,co_id_ps: str):
         doc = self.collection.document(co_id_ps).get()
         return doc.to_dict() if doc.exists else None
     
-    def find_by_coIdPs(self, co_id_ps: str):
+    def find_by_dni(self, dni: str):
         docs = (
             self.collection
-            .where(filter=FieldFilter("coIdPs", "==", co_id_ps))
+            .where(filter=FieldFilter("dni", "==", dni))
             .limit(1)
             .stream()
         )
@@ -36,10 +36,10 @@ class StudentRepositoryAdapter(StudentRepositoryPort):
     
     
 
-    def update_by_co_id_ps(self, co_id_ps: str, data: dict) -> bool:
+    def update_by_dni(self, dni: str, data: dict) -> bool:
         docs = (
             self.collection
-            .where(filter=FieldFilter("coIdPs", "==", co_id_ps))
+            .where(filter=FieldFilter("dni", "==", dni))
             .limit(1)
             .stream()
         )
