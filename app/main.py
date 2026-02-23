@@ -19,7 +19,7 @@ from app.delivery.http.middlewares.ip_middleware import IPAndApiKeyMiddleware
 
 # Routers
 from app.delivery.http.routers.student_router import router as student_router
-from app.delivery.http.routers.employer_router import router as employer_router
+from app.delivery.http.routers.company_router import router as company_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -59,7 +59,7 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
     )
 # 🔌 Routers
 app.include_router(student_router, prefix="/api/students", tags=["Students"])
-app.include_router(employer_router, prefix="/api/employers", tags=["Employers"])
+app.include_router(company_router, prefix="/api/companies", tags=["Companies"])
 
 if __name__ == "__main__":
     import uvicorn

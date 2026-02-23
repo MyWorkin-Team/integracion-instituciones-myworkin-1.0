@@ -17,15 +17,11 @@ def get_student_repo(university_id: str = Path(...), app = Depends(get_firebase_
         _repos_cache[university_id] = StudentRepositoryAdapter(app)
     return _repos_cache[university_id]
 
-# Los casos de uso se mantienen igual, pero ahora reciben un repo que 'conoce' su App
 def upsert_student_use_case(repo = Depends(get_student_repo)):
     return UpsertStudentUseCase(repo)
 
 def get_student_by_id_use_case(repo = Depends(get_student_repo)):
     return GetStudentByIdUseCase(repo)
 
-# 2. ¿Qué pasa con repo_use_case?
-# Ya no puede ser una función que llamas manualmente. 
-# Si la necesitas en un router, úsala así:
 def get_repo_di(repo = Depends(get_student_repo)):
     return repo

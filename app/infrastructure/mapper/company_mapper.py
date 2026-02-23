@@ -1,20 +1,28 @@
-from app.domain.model.employer import Employer
-from app.delivery.schemas.employer_dto import EmployerDTO
+from app.domain.model.company import Company
+from app.delivery.schemas.company_dto import CompanyDTO
 
 
-def employer_to_domain(body: EmployerDTO) -> Employer:
+def company_to_domain(body: CompanyDTO) -> Company:
     """
     Mapea DTO de empresa a modelo de dominio.
-    Soporta tanto formato nuevo (simplificado) como formato antiguo (backward compatibility).
+    Soporta esquema de 'companies' con mapeo de campos antiguos.
     """
     data = body.model_dump(exclude_unset=True)
 
-    # === BACKWARD COMPATIBILITY ===
+    # === BACKWARD COMPATIBILITY & MAPPING ===
 
     # displayName: usar label o alias si no viene
     display_name = data.get("displayName") or data.get("label") or data.get("alias")
 
-    # sector: extraer de industries[0].label si no viene
+    # ruc: taxId -> ruc
+    ruc = data.get("ruc") or data.get("taxId")
+
+    # sitio_web: website -> sitio_web
+    sitio_web = data.get("sitio_web") or data.get("website")
+    if sitio_web:
+        sitio_web = str(sitio_web)
+
+    # sector: extraer de industries[0].label si no viene (formato antiguo)
     sector = data.get("sector")
     if not sector:
         industries = data.get("industries")
@@ -35,29 +43,27 @@ def employer_to_domain(body: EmployerDTO) -> Employer:
         if primary_contact and isinstance(primary_contact, dict):
             phone = primary_contact.get("phone")
 
-    # website: convertir a string si es HttpUrl
-    website = data.get("website")
-    if website:
-        website = str(website)
-
-    return Employer(
+    return Company(
         # === IDENTIDAD ===
-        name=data.get("name"),
+        company_id=data.get("company_id"),
         displayName=display_name,
         logo=data.get("logo"),
-        taxId=data.get("taxId"),
+        ruc=ruc,
         importedId=data.get("importedId"),
 
         # === INFORMACION ===
         description=data.get("description") or data.get("overview"),
-        website=website,
+        sitio_web=sitio_web,
         contactEmail=contact_email,
+        representative=data.get("representative"),
         phone=phone,
 
         # === CLASIFICACION ===
         sector=sector,
         companySize=data.get("companySize"),
+        roles=data.get("roles"),
         status=data.get("status") or "active",
+        users_companies=[c.model_dump() for c in body.users_companies] if body.users_companies else None,
 
         # === RESPONSE ===
         id=data.get("id"),
