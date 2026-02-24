@@ -105,6 +105,18 @@ def create_firebase_user(
         raise FirebaseUserCreateError(str(e))
 
 
+# ------------------------------------
+# Auth - GET
+# ------------------------------------
+def get_firebase_user_by_email(app, email: str):
+    try:
+        return auth.get_user_by_email(email, app=app)
+    except auth.UserNotFoundError:
+        return None
+    except Exception as e:
+        raise FirebaseUserNotFound(str(e))
+
+
 # --------------------------------------------------
 # Auth - UPDATE
 # --------------------------------------------------

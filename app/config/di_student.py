@@ -1,7 +1,7 @@
 from app.infrastructure.firebase.firebase_client import init_firebase
 from app.infrastructure.firebase.student_repository_adapter import StudentRepositoryAdapter
 from app.application.student.upsert_student_use_case import UpsertStudentUseCase
-from app.application.student.get_student_by_id_use_case import GetStudentByIdUseCase
+from app.application.student.get_student_by_id_use_case import GetStudentByDniUseCase
 from fastapi import Path
 from fastapi.params import Depends
 
@@ -20,8 +20,8 @@ def get_student_repo(university_id: str = Path(...), app = Depends(get_firebase_
 def upsert_student_use_case(repo = Depends(get_student_repo)):
     return UpsertStudentUseCase(repo)
 
-def get_student_by_id_use_case(repo = Depends(get_student_repo)):
-    return GetStudentByIdUseCase(repo)
+def get_student_by_dni_use_case(repo = Depends(get_student_repo)):
+    return GetStudentByDniUseCase(repo)
 
 def get_repo_di(repo = Depends(get_student_repo)):
     return repo

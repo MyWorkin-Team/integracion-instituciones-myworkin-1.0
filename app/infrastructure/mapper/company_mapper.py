@@ -67,6 +67,6 @@ def company_to_domain(body: CompanyDTO) -> Company:
 
         # === RESPONSE ===
         id=data.get("id"),
-        created_at=data.get("created_at"),
-        updated_at=data.get("updated_at"),
+        createdAt=data.get("createdAt") or data.get("created_at"),
+        updatedAt=data.get("updatedAt") or data.get("updated_at"),
     )

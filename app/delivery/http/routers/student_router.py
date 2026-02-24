@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.params import Depends
 
 from app.core.limiter import limiter
-from app.config.di_student import get_student_by_id_use_case, upsert_student_use_case
+from app.config.di_student import get_student_by_dni_use_case, upsert_student_use_case
 from app.core.config import require_api_key
 from app.infrastructure.mapper.student_mapper import student_to_domain
 
@@ -12,8 +12,8 @@ from app.config.helpers import ok, fail
 from app.core.dto.api_response import ApiResponse, ApiError
 
 from fastapi import Path
-from app.config.di_student import get_student_by_id_use_case
-from app.application.student.get_student_by_id_use_case import GetStudentByIdUseCase
+from app.config.di_student import get_student_by_dni_use_case
+from app.application.student.get_student_by_id_use_case import GetStudentByDniUseCase
 from fastapi.params import Depends  
 from app.application.student.upsert_student_use_case import UpsertStudentUseCase
 from app.core.dependencies import validate_university_id
@@ -75,21 +75,21 @@ def upsert_student(
 
 
 @router.get(
-    "/pull/{university_id}/{student_id}",
+    "/pull/{university_id}/{dni}",
     dependencies=[Depends(validate_university_id)],
     response_model=ApiResponse[dict]
 )
 def pull_student(
-    student_id: str,
+    dni: str,
     university_id: str = Path(...),
-    uc: GetStudentByIdUseCase = Depends(get_student_by_id_use_case)
+    uc: GetStudentByDniUseCase = Depends(get_student_by_dni_use_case)
 ):
-    student = uc.execute(student_id)
+    student = uc.execute(dni)
 
     if not student:
         return fail(
             code="STUDENT_NOT_FOUND",
-            message="No se encontró un estudiante con el ID especificado",
+            message="No se encontró un estudiante con el DNI especificado",
             status=404
         )
 

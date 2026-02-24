@@ -2,6 +2,7 @@ from app.domain.port.company_repository_port import CompanyRepositoryPort
 from app.domain.model.company import Company
 from google.cloud.firestore import FieldFilter
 from firebase_admin import firestore
+from typing import Optional
 
 class CompanyRepositoryAdapter(CompanyRepositoryPort):
 
@@ -15,7 +16,6 @@ class CompanyRepositoryAdapter(CompanyRepositoryPort):
     # SAVE USER-COMPANY RELATION
     # -------------------------------------------------
     def save_user_company_relation(self, relation: dict):
-        print(relation)
         relation["createdFromAdmin"] = True
         now = firestore.SERVER_TIMESTAMP
 
@@ -31,8 +31,8 @@ class CompanyRepositoryAdapter(CompanyRepositoryPort):
         # 🔎 Verificar si ya existe la relación
         query = (
             self.users_companies_collection
-            .where("email", "==", email)
-            .where("companyId", "==", company_id)
+            .where(filter=FieldFilter("email", "==", email))
+            .where(filter=FieldFilter("companyId", "==", company_id))
             .limit(1)
             .stream()
         )
@@ -47,11 +47,20 @@ class CompanyRepositoryAdapter(CompanyRepositoryPort):
             return doc.id
 
         # 🚀 Si no existe → crear nuevo
-        doc_ref = self.users_companies_collection.document()
-        relation["uid"] = doc_ref.id
+        uid = relation.get("uid")
+        if uid:
+            doc_ref = self.users_companies_collection.document(uid)
+        else:
+            doc_ref = self.users_companies_collection.document()
+            relation["uid"] = doc_ref.id
+            
         doc_ref.set(relation)
 
         return doc_ref.id
+
+    def get_next_user_company_id(self) -> str:
+        """Genera un nuevo ID para la colección users_companies"""
+        return self.users_companies_collection.document().id
     
     # -------------------------------------------------
     # CREATE / SAVE (merge)
@@ -105,3 +114,23 @@ class CompanyRepositoryAdapter(CompanyRepositoryPort):
 
         docs[0].reference.update(data)
         return True
+
+    # -------------------------------------------------
+    # FIND USER-COMPANY BY EMAIL
+    # -------------------------------------------------
+    def find_user_company_by_email(self, email: str) -> Optional[dict]:
+        """Busca un usuario en la colección users_companies por email"""
+        docs = (
+            self.users_companies_collection
+            .where(filter=FieldFilter("email", "==", email))
+            .limit(1)
+            .stream()
+        )
+
+        docs = list(docs)
+        if not docs:
+            return None
+
+        data = docs[0].to_dict()
+        data["id"] = docs[0].id
+        return data
