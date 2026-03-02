@@ -9,12 +9,19 @@ def parse_list(value: str | None):
         return []
     return [v.strip() for v in value.split(",") if v.strip()]
 
-# 🔐 API KEY
-PUSH_API_KEY = os.getenv("PUSH_API_KEY")
+import json
 
-# 🌍 IPs permitidas
-ALLOWED_IPS = set(parse_list(os.getenv("ALLOWED_IPS")))
+# 🔐 API KEYS POR UNIVERSIDAD
+def load_university_keys():
+    try:
+        keys_raw = os.getenv("UNIVERSITY_API_KEYS", "{}")
+        return json.loads(keys_raw)
+    except Exception as e:
+        print(f"Error loading UNIVERSITY_API_KEYS: {e}")
+        return {}
 
-# 🔒 Rutas protegidas
+UNIVERSITY_API_KEYS = load_university_keys()
+
+# 🔒 Rutas protegidas (Middlewares)
 PROTECTED_PATHS = tuple(parse_list(os.getenv("PROTECTED_PATHS")))
 

@@ -22,15 +22,14 @@ from app.core.dependencies import validate_university_id
 router = APIRouter()
 
 @router.post(
-    "/push/{university_id}",
+    "/push",
     dependencies=[Depends(require_api_key), Depends(validate_university_id)],
     response_model=ApiResponse[dict]
 )
 @limiter.limit("3000/minute")
-def upsert_company(
+async def upsert_company(
     request: Request,
     body: CompanyDTO,
-    university_id: str = Path(...),
     uc: UpsertCompanyUseCase = Depends(upsert_company_use_case)
 ):
     company = company_to_domain(body)
@@ -70,17 +69,29 @@ def upsert_company(
             message=str(e)
         )
 
-@router.get(
-    "/pull/{university_id}/{tax_id}",
+@router.post(
+    "/pull",
     dependencies=[Depends(validate_university_id)],
     response_model=ApiResponse[dict],
 )
-def pull_company(
-    tax_id: str,
-    university_id: str = Path(...),
+async def pull_company(
+    request: Request,
     uc: GetCompanyByTaxIdUseCase = Depends(get_company_by_ruc_use_case)
 ):
-    # Usamos el tax_id del path como RUC
+    try:
+        body = await request.json()
+        tax_id = body.get("tax_id") or body.get("ruc")
+    except Exception:
+        tax_id = None
+
+    if not tax_id:
+        return fail(
+            code="INVALID_DATA",
+            message="tax_id is required in body",
+            status=400
+        )
+
+    # Usamos el tax_id del body como RUC
     company = uc.execute(tax_id)
 
     if not company:

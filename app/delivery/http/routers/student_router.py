@@ -25,15 +25,14 @@ router = APIRouter()
 
 
 @router.post(
-    "/push/{university_id}",
+    "/push",
     dependencies=[Depends(require_api_key), Depends(validate_university_id)],
     response_model=ApiResponse[dict]
 )
 @limiter.limit("3000/minute")
-def upsert_student(
+async def upsert_student(
     request: Request,
     body: StudentDTO,
-    university_id: str = Path(...),
     uc_upsert: UpsertStudentUseCase = Depends(upsert_student_use_case)
 ):
     student = student_to_domain(body)
@@ -74,16 +73,28 @@ def upsert_student(
         )
 
 
-@router.get(
-    "/pull/{university_id}/{dni}",
+@router.post(
+    "/pull",
     dependencies=[Depends(validate_university_id)],
     response_model=ApiResponse[dict]
 )
-def pull_student(
-    dni: str,
-    university_id: str = Path(...),
+async def pull_student(
+    request: Request,
     uc: GetStudentByDniUseCase = Depends(get_student_by_dni_use_case)
 ):
+    try:
+        body = await request.json()
+        dni = body.get("dni")
+    except Exception:
+        dni = None
+
+    if not dni:
+        return fail(
+            code="INVALID_DATA",
+            message="dni is required in body",
+            status=400
+        )
+
     student = uc.execute(dni)
 
     if not student:

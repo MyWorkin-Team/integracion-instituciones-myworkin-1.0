@@ -19,5 +19,4 @@ def student_to_domain(dto: StudentDTO) -> Student:
         email=data.get("email"),
         phone=phone,
         studentStatus=data.get("studentStatus"),
-        university=data.get("university"),
     )

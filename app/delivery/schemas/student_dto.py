@@ -12,6 +12,7 @@ class StudentDTO(BaseModel):
     cycle: Optional[int] = None
     displayName: Optional[str] = None
     dni: Optional[str] = None
+    university_id: Optional[str] = None
     email: Optional[EmailStr] = None
     phone: Optional[int] = None
     studentStatus: Optional[str] = None  # "Estudiante" | "Egresado"

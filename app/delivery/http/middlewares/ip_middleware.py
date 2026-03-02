@@ -1,64 +1,76 @@
+import json
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 import logging
 
 from app.config.security import (
-    ALLOWED_IPS,
     PROTECTED_PATHS,
-    PUSH_API_KEY,
+    UNIVERSITY_API_KEYS,
 )
 
-logger = logging.getLogger("push_security")
+logger = logging.getLogger("security")
 
-class IPAndApiKeyMiddleware(BaseHTTPMiddleware):
+class ApiKeyMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-
         path = request.url.path
-        # logger.info(f"[SECURITY] Incoming path: {path}")
-
+        
         # 🔎 ¿Ruta protegida?
         is_protected = any(path.startswith(p) for p in PROTECTED_PATHS)
 
         if not is_protected:
             return await call_next(request)
 
+        # 🔐 Obtener API Key de cabecera
+        api_key_received = request.headers.get("x-api-key")
 
-        # 🧪 IP
-        client_ip = request.headers.get("x-test-ip") or request.client.host
-        api_key = request.headers.get("x-api-key")
+        if not api_key_received:
+            return self._unauthorized("x-api-key header missing")
 
+        # 🔍 Obtener university_id (desde body en POST/PUT)
+        university_id = None
+        if request.method in ["POST", "PUT"]:
+            try:
+                # Leemos el body sin consumirlo permanentemente
+                body_bytes = await request.body()
+                if body_bytes:
+                    body_json = json.loads(body_bytes)
+                    university_id = body_json.get("university_id")
+                
+                # Re-crear el request para que el siguiente handler pueda leer el body
+                async def receive():
+                    return {"type": "http.request", "body": body_bytes}
+                request._receive = receive
+                
+            except Exception as e:
+                logger.error(f"Error parsing body in middleware: {e}")
 
-        logger.warning(f"[SECURITY] Protected path | IP={client_ip}")
-        # 🚫 IP no permitida
-        if client_ip not in ALLOWED_IPS:
+        if not university_id:
             return JSONResponse(
-                status_code=403,
+                status_code=400,
                 content={
-                    "status": 403,
-                    "label": "Forbidden",
-                    "description": "IP no permitida",
-                    "body": {
-                        "error": "Forbidden",
-                        "message": "La IP desde la que se realiza la petición no está permitida."
-                    }
+                    "status": 400,
+                    "label": "Bad Request",
+                    "description": "university_id missing",
+                    "body": {"error": "Bad Request", "message": "university_id es requerido en el body."}
                 }
             )
 
-        # 🔐 API KEY inválida
-        if not api_key or api_key != PUSH_API_KEY:
-            return JSONResponse(
-                status_code=401,
-                content={
-                    "status": 401,
-                    "label": "Unauthorized",
-                    "description": "API key inválida",
-                    "body": {
-                        "error": "Unauthorized",
-                        "message": "La API key es inválida o no fue enviada."
-                    }
-                }
-            )
+        # 🔑 Verificar Key para esa universidad
+        expected_key = UNIVERSITY_API_KEYS.get(university_id.upper())
+        if not expected_key or api_key_received != expected_key:
+            logger.warning(f"[SECURITY] Invalid key for University: {university_id}")
+            return self._unauthorized("API key inválida para la universidad especificada.")
 
-        # logger.info("[SECURITY] Access granted")
         return await call_next(request)
+
+    def _unauthorized(self, message: str):
+        return JSONResponse(
+            status_code=401,
+            content={
+                "status": 401,
+                "label": "Unauthorized",
+                "description": "Acceso denegado",
+                "body": {"error": "Unauthorized", "message": message}
+            }
+        )

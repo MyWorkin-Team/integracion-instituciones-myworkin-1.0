@@ -28,6 +28,7 @@ class CompanyDTO(BaseModel):
     displayName: Optional[str] = Field(None, min_length=2)
     logo: Optional[str] = None
     ruc: Optional[str] = Field(None, min_length=11, max_length=11)
+    university_id: Optional[str] = None
     importedId: Optional[str] = None
 
     # === INFORMACION ===

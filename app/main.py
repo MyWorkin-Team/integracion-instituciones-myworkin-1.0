@@ -15,7 +15,7 @@ import logging
 
 from app.core.dto.api_response import validation_exception_handler
 from app.core.limiter import limiter
-from app.delivery.http.middlewares.ip_middleware import IPAndApiKeyMiddleware
+from app.delivery.http.middlewares.ip_middleware import ApiKeyMiddleware
 
 # Routers
 from app.delivery.http.routers.student_router import router as student_router
@@ -37,7 +37,7 @@ app.add_exception_handler(
 )
 
 # 🔐 Middlewares
-app.add_middleware(IPAndApiKeyMiddleware)
+app.add_middleware(ApiKeyMiddleware)
 
 # Rate limit
 app.state.limiter = limiter
