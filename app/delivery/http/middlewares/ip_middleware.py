@@ -59,7 +59,6 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
         # 🔑 Verificar Key para esa universidad
         expected_key = UNIVERSITY_API_KEYS.get(university_id.upper())
         if not expected_key or api_key_received != expected_key:
-            logger.warning(f"[SECURITY] Invalid key for University: {university_id}")
             return self._unauthorized("API key inválida para la universidad especificada.")
 
         return await call_next(request)
