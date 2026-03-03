@@ -1,22 +1,24 @@
-from typing import Optional
-from datetime import date, datetime
-from pydantic import BaseModel, EmailStr, ConfigDict
+from typing import Literal, Optional
+from pydantic import BaseModel, EmailStr, ConfigDict, Field
 
 
 class StudentDTO(BaseModel):
     """
     DTO para estudiantes.
-    Actualizado según el esquema solicitado.
+    Validaciones según el esquema de campos requeridos y opcionales.
     """
-    career: Optional[str] = None
-    cycle: Optional[int] = None
-    displayName: Optional[str] = None
-    dni: Optional[str] = None
-    university_id: Optional[str] = None
-    email: Optional[EmailStr] = None
-    phone: Optional[int] = None
-    studentStatus: Optional[str] = None  # "Estudiante" | "Egresado"
-    university: Optional[str] = None
+    # Campos requeridos
+    university_id: str = Field(..., description="Identificador de la universidad")
+    displayName: str = Field(..., description="Nombre completo del estudiante")
+    email: EmailStr = Field(..., description="Correo electrónico institucional o personal")
+    university: str = Field(..., description="Nombre completo de la universidad")
+    career: str = Field(..., description="Carrera del estudiante")
+    studentStatus: Literal["Estudiante", "Egresado"] = Field(..., description="Estado académico actual")
+
+    # Campos opcionales
+    phone: Optional[str] = Field(None, description="Número de teléfono con código de país (ej: 51...)")
+    dni: Optional[str] = Field(None, description="Documento de identidad nacional")
+    cycle: Optional[int] = Field(None, ge=1, le=12, description="Ciclo académico actual (1 – 12)")
 
     # Identificadores (solo lectura en respuesta)
     id: Optional[str] = None
