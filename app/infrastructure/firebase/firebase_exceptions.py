@@ -1,6 +1,9 @@
 class FirebaseError(Exception):
     pass
 
+class FirebaseConfigError(FirebaseError):
+    pass
+
 class FirebaseUserNotFound(FirebaseError):
     pass
 

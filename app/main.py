@@ -16,6 +16,7 @@ import logging
 from app.core.dto.api_response import validation_exception_handler
 from app.core.limiter import limiter
 from app.delivery.http.middlewares.ip_middleware import ApiKeyMiddleware
+from app.infrastructure.firebase.firebase_exceptions import FirebaseConfigError
 
 # Routers
 from app.delivery.http.routers.student_router import router as student_router
@@ -35,6 +36,21 @@ app.add_exception_handler(
     RequestValidationError,
     validation_exception_handler
 )
+
+@app.exception_handler(FirebaseConfigError)
+async def firebase_config_error_handler(request: Request, exc: FirebaseConfigError):
+    return JSONResponse(
+        status_code=500,
+        content={
+            "status": 500,
+            "label": "Internal Server Error",
+            "description": "Error en la configuración de Firebase",
+            "body": {
+                "error": "Firebase Configuration Error",
+                "message": str(exc)
+            }
+        }
+    )
 
 # 🔐 Middlewares
 app.add_middleware(ApiKeyMiddleware)

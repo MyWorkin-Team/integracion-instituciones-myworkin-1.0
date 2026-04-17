@@ -3,6 +3,7 @@ import json
 import firebase_admin
 from firebase_admin import credentials, firestore, auth
 from app.infrastructure.firebase.firebase_exceptions import (
+    FirebaseConfigError,
     FirebaseUserAlreadyExists,
     FirebaseUserCreateError,
     FirebaseUserNotFound,
@@ -43,7 +44,7 @@ def init_firebase(university_id: str):
 
     if not service_account_json:
         logger.error(f"Configuración faltante para universidad: {university_id}")
-        raise RuntimeError(f"La configuración de Firebase para {university_id} no está configurada")
+        raise FirebaseConfigError(f"La configuración de Firebase para {university_id} no está configurada")
 
     try:
         cred_dict = json.loads(service_account_json)

@@ -27,7 +27,7 @@ class CompanyDTO(BaseModel):
 
     # === CAMPOS OBLIGATORIOS (según tu employerFields) ===
     university_id: str
-    company_id: str = Field(..., pattern="^[a-z0-9-]+$")
+    company_id: str = Field(..., pattern="^[a-z0-9_-]+$")
     displayName: str = Field(..., min_length=2)
     ruc: str = Field(..., min_length=11, max_length=11)
     contactEmail: EmailStr
