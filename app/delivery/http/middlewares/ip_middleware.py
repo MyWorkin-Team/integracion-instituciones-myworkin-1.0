@@ -7,6 +7,7 @@ import logging
 from app.config.security import (
     PROTECTED_PATHS,
     UNIVERSITY_API_KEYS,
+    ALLOWED_UNIVERSITIES,
 )
 
 logger = logging.getLogger("security")
@@ -56,8 +57,13 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
                 }
             )
 
+        # ✅ Validar que la universidad esté en la lista de permitidas
+        university_id_upper = university_id.upper()
+        if university_id_upper not in ALLOWED_UNIVERSITIES:
+            return self._unauthorized(f"Universidad '{university_id}' no está autorizada.")
+
         # 🔑 Verificar Key para esa universidad
-        expected_key = UNIVERSITY_API_KEYS.get(university_id.upper())
+        expected_key = UNIVERSITY_API_KEYS.get(university_id_upper)
         if not expected_key or api_key_received != expected_key:
             return self._unauthorized("API key inválida para la universidad especificada.")
 

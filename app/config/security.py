@@ -25,3 +25,6 @@ UNIVERSITY_API_KEYS = load_university_keys()
 # 🔒 Rutas protegidas (Middlewares)
 PROTECTED_PATHS = tuple(parse_list(os.getenv("PROTECTED_PATHS")))
 
+# ✅ Universidades permitidas
+ALLOWED_UNIVERSITIES = tuple(parse_list(os.getenv("ALLOWED_UNIVERSITIES")))
+
