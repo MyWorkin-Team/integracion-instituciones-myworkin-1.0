@@ -23,6 +23,9 @@ from app.delivery.http.routers.student_router import router as student_router
 from app.delivery.http.routers.company_router import router as company_router
 from app.delivery.http.routers.jobs_router import router as jobs_router
 
+# Sync
+from app.infrastructure.sync.firebase_redis_sync import sync_all_universities
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
@@ -32,6 +35,19 @@ app = FastAPI(
     title="Integración Instituciones - MyWorkIn",
     version="1.0.0"
 )
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Sync Firebase data to Redis on startup"""
+    logger = logging.getLogger(__name__)
+    logger.info("🚀 Starting Firebase→Redis sync on startup...")
+    try:
+        sync_all_universities()
+        logger.info("✓ Firebase→Redis sync completed successfully")
+    except Exception as e:
+        logger.error(f"⚠️ Firebase→Redis sync failed: {str(e)}")
+        # Don't fail startup if sync fails
 
 app.add_exception_handler(
     RequestValidationError,

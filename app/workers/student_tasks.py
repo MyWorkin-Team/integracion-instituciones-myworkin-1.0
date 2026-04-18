@@ -22,7 +22,17 @@ def upsert_student_job(university_id: str, student_dict: dict) -> str:
     student = Student(**student_dict)
     result = uc.execute(student)
 
-    # Register in cache after successful Firebase write
-    RedisCache.register_student(student.dni, student.email or "", university_id)
+    # Register in cache with full data after successful Firebase write
+    cache_data = {
+        "university_id": university_id,
+        "dni": student.dni,
+        "email": student.email,
+        "displayName": student.displayName,
+        "career": student.career,
+        "studentStatus": student.studentStatus,
+        "createdAt": str(student.createdAt) if student.createdAt else None,
+        "updatedAt": str(student.updatedAt) if student.updatedAt else None,
+    }
+    RedisCache.register_student(student.dni, student.email or "", university_id, cache_data)
 
     return result

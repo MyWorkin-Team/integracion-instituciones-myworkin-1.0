@@ -25,6 +25,7 @@ from rq import Queue
 from app.infrastructure.queue.redis_client import get_redis_connection
 from app.workers.student_tasks import upsert_student_job
 from app.infrastructure.cache.redis_cache import RedisCache
+from app.infrastructure.validation.firebase_validator import FirebaseValidator
 
 router = APIRouter()
 
@@ -49,21 +50,25 @@ async def upsert_student(
             message="dni is required for upsert"
         )
 
-    # Validate DNI is not already registered
-    if RedisCache.is_dni_registered(student.dni, university_id):
-        return fail(
-            status=409,
-            code="DUPLICATE_DNI",
-            message=f"DNI {student.dni} ya está registrado para esta universidad"
-        )
+    # Validate email globally (Cascading: Redis → Firebase)
+    if student.email:
+        # Check Redis first
+        exists_in_redis, redis_type = RedisCache.is_email_registered_globally(student.email)
+        if exists_in_redis:
+            return fail(
+                status=409,
+                code="DUPLICATE_EMAIL",
+                message=f"Email {student.email} ya está registrado como {redis_type} en el sistema"
+            )
 
-    # Validate email is not already registered
-    if student.email and RedisCache.is_email_registered(student.email, university_id, "student"):
-        return fail(
-            status=409,
-            code="DUPLICATE_EMAIL",
-            message=f"Email {student.email} ya está registrado para esta universidad"
-        )
+        # Check Firebase (authority)
+        exists_in_firebase, firebase_type = FirebaseValidator.email_exists_globally(student.email)
+        if exists_in_firebase:
+            return fail(
+                status=409,
+                code="DUPLICATE_EMAIL",
+                message=f"Email {student.email} ya existe como {firebase_type} en el sistema"
+            )
 
     # Enqueue job to RQ
     try:
@@ -71,8 +76,18 @@ async def upsert_student(
         student_dict = asdict(student)
         job = q.enqueue(upsert_student_job, university_id, student_dict)
 
-        # Register in cache after successful enqueue
-        RedisCache.register_student(student.dni, student.email or "", university_id)
+        # Register in cache with full data after successful enqueue
+        cache_data = {
+            "university_id": university_id,
+            "dni": student.dni,
+            "email": student.email,
+            "displayName": student.displayName,
+            "career": student.career,
+            "studentStatus": student.studentStatus,
+            "createdAt": str(student.createdAt) if student.createdAt else None,
+            "updatedAt": str(student.updatedAt) if student.updatedAt else None,
+        }
+        RedisCache.register_student(student.dni, student.email or "", university_id, cache_data)
 
         return ok(
             status=202,

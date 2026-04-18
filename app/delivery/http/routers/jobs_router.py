@@ -387,67 +387,64 @@ async def get_job_status(job_id: str):
 
 
 @router.get(
-    "/validation/cache",
+    "/cache/entities",
     response_model=ApiResponse[dict]
 )
-async def get_validation_cache():
-    """Get all validation cache entries"""
+async def get_cached_entities():
+    """Get all cached entity keys (format: university_id:identifier:email)"""
     try:
         conn = get_redis_connection()
-        cache_data = {
-            "student_dnis": [],
-            "student_emails": [],
-            "company_rucs": [],
-            "company_emails": []
+        entities_data = {
+            "students": [],
+            "companies": []
         }
 
-        # Get all student DNIs
-        for key in conn.scan_iter(match=f"{RedisCache.STUDENT_DNI_PREFIX}*"):
-            cache_data["student_dnis"].append(key.decode() if isinstance(key, bytes) else key)
+        # Get all student keys (excluding :data suffix)
+        for key in conn.scan_iter(match=f"{RedisCache.STUDENT_PREFIX}*"):
+            key_str = key.decode() if isinstance(key, bytes) else key
+            # Exclude :data keys, only show main keys
+            if not key_str.endswith(":data"):
+                entities_data["students"].append(key_str)
 
-        # Get all student emails
-        for key in conn.scan_iter(match=f"{RedisCache.STUDENT_EMAIL_PREFIX}*"):
-            cache_data["student_emails"].append(key.decode() if isinstance(key, bytes) else key)
+        # Get all company keys (excluding :data suffix)
+        for key in conn.scan_iter(match=f"{RedisCache.COMPANY_PREFIX}*"):
+            key_str = key.decode() if isinstance(key, bytes) else key
+            # Exclude :data keys, only show main keys
+            if not key_str.endswith(":data"):
+                entities_data["companies"].append(key_str)
 
-        # Get all company RUCs
-        for key in conn.scan_iter(match=f"{RedisCache.COMPANY_RUC_PREFIX}*"):
-            cache_data["company_rucs"].append(key.decode() if isinstance(key, bytes) else key)
-
-        # Get all company emails
-        for key in conn.scan_iter(match=f"{RedisCache.COMPANY_EMAIL_PREFIX}*"):
-            cache_data["company_emails"].append(key.decode() if isinstance(key, bytes) else key)
-
+        total = len(entities_data["students"]) + len(entities_data["companies"])
         return ok(
             status=200,
             result="success",
-            message="Validation cache entries",
-            data=cache_data
+            message=f"Total: {total} cached entities",
+            data=entities_data
         )
     except Exception as e:
         return fail(
             status=500,
             code="CACHE_ERROR",
-            message=f"Error al consultar cache: {str(e)}"
+            message=f"Error al consultar datos: {str(e)}"
         )
 
 
 @router.delete(
-    "/validation/cache",
+    "/cache/entities",
     response_model=ApiResponse[dict]
 )
-async def clear_validation_cache():
-    """Clear all validation cache entries"""
+async def clear_cached_entities():
+    """Clear all cached entities"""
     try:
         RedisCache.clear_cache()
         return ok(
             status=200,
             result="cleared",
-            message="Validation cache cleared successfully",
+            message="All cached entities cleared successfully",
             data={"status": "cleared"}
         )
     except Exception as e:
         return fail(
             status=500,
             code="CACHE_ERROR",
-            message=f"Error al limpiar cache: {str(e)}"
+            message=f"Error al limpiar datos: {str(e)}"
         )

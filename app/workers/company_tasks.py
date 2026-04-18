@@ -22,10 +22,28 @@ def upsert_company_job(university_id: str, company_dict: dict) -> str:
     company = Company(**company_dict)
     result = uc.execute(company)
 
-    # Register in cache after successful Firebase write
+    # Register in cache with full data after successful Firebase write
     company_email = ""
-    if company.users_companies and company.users_companies[0].email:
-        company_email = company.users_companies[0].email
-    RedisCache.register_company(company.ruc, company_email, university_id)
+    users_data = []
+    if company.users_companies:
+        company_email = company.users_companies[0].email or ""
+        for user in company.users_companies:
+            users_data.append({
+                "email": user.email,
+                "firstName": user.firstName,
+                "lastName": user.lastName
+            })
+
+    cache_data = {
+        "university_id": university_id,
+        "ruc": company.ruc,
+        "displayName": company.displayName,
+        "sector": company.sector,
+        "phone": company.phone,
+        "users_companies": users_data,
+        "createdAt": str(company.createdAt) if company.createdAt else None,
+        "updatedAt": str(company.updatedAt) if company.updatedAt else None,
+    }
+    RedisCache.register_company(company.ruc, company_email, university_id, cache_data)
 
     return result

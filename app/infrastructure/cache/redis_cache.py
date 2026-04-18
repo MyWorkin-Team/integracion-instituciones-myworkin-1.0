@@ -7,56 +7,62 @@ class RedisCache:
     """Redis cache for validation and deduplication"""
 
     # Key prefixes
-    STUDENT_DNI_PREFIX = "student:dni:"
-    STUDENT_EMAIL_PREFIX = "student:email:"
-    COMPANY_RUC_PREFIX = "company:ruc:"
-    COMPANY_EMAIL_PREFIX = "company:email:"
+    STUDENT_PREFIX = "student:"
+    COMPANY_PREFIX = "company:"
 
     # TTL: 24 horas
     DEFAULT_TTL = 86400
 
     @staticmethod
-    def is_dni_registered(dni: str, university_id: str) -> bool:
-        """Check if DNI already exists for university"""
+    def is_email_registered_globally(email: str) -> tuple[bool, str]:
+        """Check if email exists globally (any university, any entity type)
+        Returns: (exists, entity_type) where entity_type is 'student', 'company', or None
+        """
         conn = get_redis_connection()
-        key = f"{RedisCache.STUDENT_DNI_PREFIX}{university_id}:{dni}"
-        return conn.exists(key) > 0
+        email_lower = email.lower()
 
-    @staticmethod
-    def is_email_registered(email: str, university_id: str, entity_type: str = "student") -> bool:
-        """Check if email already exists for university"""
-        conn = get_redis_connection()
-        prefix = RedisCache.STUDENT_EMAIL_PREFIX if entity_type == "student" else RedisCache.COMPANY_EMAIL_PREFIX
-        key = f"{prefix}{university_id}:{email.lower()}"
-        return conn.exists(key) > 0
+        # Check student emails globally
+        if any(conn.scan_iter(match=f"{RedisCache.STUDENT_PREFIX}*:*:{email_lower}")):
+            return True, "student"
+
+        # Check company emails globally
+        if any(conn.scan_iter(match=f"{RedisCache.COMPANY_PREFIX}*:*:{email_lower}")):
+            return True, "company"
+
+        return False, None
 
     @staticmethod
     def is_ruc_registered(ruc: str, university_id: str) -> bool:
         """Check if RUC already exists for university"""
         conn = get_redis_connection()
-        key = f"{RedisCache.COMPANY_RUC_PREFIX}{university_id}:{ruc}"
-        return conn.exists(key) > 0
+        pattern = f"{RedisCache.COMPANY_PREFIX}{university_id}:{ruc}:*"
+        return any(conn.scan_iter(match=pattern))
 
     @staticmethod
-    def register_student(dni: str, email: str, university_id: str):
-        """Register student in cache"""
+    def register_student(dni: str, email: str, university_id: str, student_data: dict = None):
+        """Register student in cache with university_id:dni:email format"""
         conn = get_redis_connection()
-        dni_key = f"{RedisCache.STUDENT_DNI_PREFIX}{university_id}:{dni}"
-        email_key = f"{RedisCache.STUDENT_EMAIL_PREFIX}{university_id}:{email.lower()}"
+        email_lower = email.lower() if email else "no-email"
+        key = f"{RedisCache.STUDENT_PREFIX}{university_id}:{dni}:{email_lower}"
 
-        conn.setex(dni_key, RedisCache.DEFAULT_TTL, "1")
-        conn.setex(email_key, RedisCache.DEFAULT_TTL, "1")
+        conn.setex(key, RedisCache.DEFAULT_TTL, "1")
+
+        # Store full data
+        if student_data:
+            conn.setex(f"{key}:data", RedisCache.DEFAULT_TTL, json.dumps(student_data, default=str))
 
     @staticmethod
-    def register_company(ruc: str, email: str, university_id: str):
-        """Register company in cache"""
+    def register_company(ruc: str, email: str, university_id: str, company_data: dict = None):
+        """Register company in cache with university_id:ruc:email format"""
         conn = get_redis_connection()
-        ruc_key = f"{RedisCache.COMPANY_RUC_PREFIX}{university_id}:{ruc}"
-        email_key = f"{RedisCache.COMPANY_EMAIL_PREFIX}{university_id}:{email.lower()}"
+        email_lower = email.lower() if email else "no-email"
+        key = f"{RedisCache.COMPANY_PREFIX}{university_id}:{ruc}:{email_lower}"
 
-        conn.setex(ruc_key, RedisCache.DEFAULT_TTL, "1")
-        if email:
-            conn.setex(email_key, RedisCache.DEFAULT_TTL, "1")
+        conn.setex(key, RedisCache.DEFAULT_TTL, "1")
+
+        # Store full data
+        if company_data:
+            conn.setex(f"{key}:data", RedisCache.DEFAULT_TTL, json.dumps(company_data, default=str))
 
     @staticmethod
     def clear_cache(university_id: str = None):
@@ -65,10 +71,8 @@ class RedisCache:
         if university_id:
             # Clear for specific university
             patterns = [
-                f"{RedisCache.STUDENT_DNI_PREFIX}{university_id}:*",
-                f"{RedisCache.STUDENT_EMAIL_PREFIX}{university_id}:*",
-                f"{RedisCache.COMPANY_RUC_PREFIX}{university_id}:*",
-                f"{RedisCache.COMPANY_EMAIL_PREFIX}{university_id}:*",
+                f"{RedisCache.STUDENT_PREFIX}{university_id}:*",
+                f"{RedisCache.COMPANY_PREFIX}{university_id}:*",
             ]
             for pattern in patterns:
                 for key in conn.scan_iter(match=pattern):
@@ -76,10 +80,8 @@ class RedisCache:
         else:
             # Clear all validation cache
             patterns = [
-                f"{RedisCache.STUDENT_DNI_PREFIX}*",
-                f"{RedisCache.STUDENT_EMAIL_PREFIX}*",
-                f"{RedisCache.COMPANY_RUC_PREFIX}*",
-                f"{RedisCache.COMPANY_EMAIL_PREFIX}*",
+                f"{RedisCache.STUDENT_PREFIX}*",
+                f"{RedisCache.COMPANY_PREFIX}*",
             ]
             for pattern in patterns:
                 for key in conn.scan_iter(match=pattern):

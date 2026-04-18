@@ -23,6 +23,7 @@ from rq import Queue
 from app.infrastructure.queue.redis_client import get_redis_connection
 from app.workers.company_tasks import upsert_company_job
 from app.infrastructure.cache.redis_cache import RedisCache
+from app.infrastructure.validation.firebase_validator import FirebaseValidator
 
 router = APIRouter()
 
@@ -46,34 +47,68 @@ async def upsert_company(
             message="ruc is required for upsert"
         )
 
-    # Validate RUC is not already registered
-    if RedisCache.is_ruc_registered(company.ruc, university_id):
-        return fail(
-            status=409,
-            code="DUPLICATE_RUC",
-            message=f"RUC {company.ruc} ya está registrado para esta universidad"
-        )
-
-    # Validate company emails are not already registered
+    # Validate company emails globally (Cascading: Redis → Firebase)
     if company.users_companies:
         for user in company.users_companies:
-            if user.email and RedisCache.is_email_registered(user.email, university_id, "company"):
-                return fail(
-                    status=409,
-                    code="DUPLICATE_EMAIL",
-                    message=f"Email {user.email} ya está registrado para esta universidad"
-                )
+            user_email = user.email if hasattr(user, 'email') else user.get("email") if isinstance(user, dict) else None
+            if user_email:
+                # Check Redis first
+                exists_in_redis, redis_type = RedisCache.is_email_registered_globally(user_email)
+                if exists_in_redis:
+                    return fail(
+                        status=409,
+                        code="DUPLICATE_EMAIL",
+                        message=f"Email {user_email} ya está registrado como {redis_type} en el sistema"
+                    )
+
+                # Check Firebase (authority)
+                exists_in_firebase, firebase_type = FirebaseValidator.email_exists_globally(user_email)
+                if exists_in_firebase:
+                    return fail(
+                        status=409,
+                        code="DUPLICATE_EMAIL",
+                        message=f"Email {user_email} ya existe como {firebase_type} en el sistema"
+                    )
 
     try:
         q = Queue("companies", connection=get_redis_connection())
         company_dict = asdict(company)
         job = q.enqueue(upsert_company_job, university_id, company_dict)
 
-        # Register in cache after successful enqueue
+        # Register in cache with full data after successful enqueue
         company_email = ""
-        if company.users_companies and company.users_companies[0].email:
-            company_email = company.users_companies[0].email
-        RedisCache.register_company(company.ruc, company_email, university_id)
+        users_data = []
+        if company.users_companies:
+            first_user = company.users_companies[0]
+            company_email = first_user.email if hasattr(first_user, 'email') else first_user.get("email", "") if isinstance(first_user, dict) else ""
+
+            for user in company.users_companies:
+                if hasattr(user, 'email'):
+                    # Object with attributes
+                    users_data.append({
+                        "email": user.email,
+                        "firstName": user.firstName,
+                        "lastName": user.lastName
+                    })
+                elif isinstance(user, dict):
+                    # Dictionary
+                    users_data.append({
+                        "email": user.get("email"),
+                        "firstName": user.get("firstName"),
+                        "lastName": user.get("lastName")
+                    })
+
+        cache_data = {
+            "university_id": university_id,
+            "ruc": company.ruc,
+            "displayName": company.displayName,
+            "sector": company.sector,
+            "phone": company.phone,
+            "users_companies": users_data,
+            "createdAt": str(company.createdAt) if company.createdAt else None,
+            "updatedAt": str(company.updatedAt) if company.updatedAt else None,
+        }
+        RedisCache.register_company(company.ruc, company_email, university_id, cache_data)
 
         return ok(
             status=202,
