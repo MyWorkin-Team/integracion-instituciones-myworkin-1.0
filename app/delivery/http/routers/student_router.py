@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.params import Depends
+from dataclasses import asdict
 
 from app.core.limiter import limiter
 from app.config.di_student import get_student_by_dni_use_case, upsert_student_use_case
@@ -14,12 +15,16 @@ from app.core.dto.api_response import ApiResponse, ApiError
 from fastapi import Path
 from app.config.di_student import get_student_by_dni_use_case
 from app.application.student.get_student_by_id_use_case import GetStudentByDniUseCase
-from fastapi.params import Depends  
+from fastapi.params import Depends
 from app.application.student.upsert_student_use_case import UpsertStudentUseCase
 from app.core.dependencies import validate_university_id
 
 from app.delivery.schemas.student_dto import StudentDTO
 from app.infrastructure.firebase.firebase_client import FirebaseUserAlreadyExists
+from rq import Queue
+from app.infrastructure.queue.redis_client import get_redis_connection
+from app.workers.student_tasks import upsert_student_job
+from app.infrastructure.cache.redis_cache import RedisCache
 
 router = APIRouter()
 
@@ -33,11 +38,10 @@ router = APIRouter()
 async def upsert_student(
     request: Request,
     body: StudentDTO,
-    uc_upsert: UpsertStudentUseCase = Depends(upsert_student_use_case)
+    university_id: str = Depends(validate_university_id)
 ):
     student = student_to_domain(body)
 
-    # 🔴 Validación
     if not student.dni:
         return fail(
             status=400,
@@ -45,31 +49,42 @@ async def upsert_student(
             message="dni is required for upsert"
         )
 
-    # 1️⃣ UPSERT (Creation or Update)
-    try:
-        result = uc_upsert.execute(student)
-        
-        status_code = 201 if result == "created" else 200
-        message = "Estudiante creado exitosamente" if result == "created" else "Estudiante actualizado exitosamente"
-
-        return ok(
-            status=status_code,
-            result=result,
-            message=message,
-            data={"dni": student.dni}
-        )
-
-    except FirebaseUserAlreadyExists:
+    # Validate DNI is not already registered
+    if RedisCache.is_dni_registered(student.dni, university_id):
         return fail(
             status=409,
-            code="AUTH_EMAIL_EXISTS",
-            message="El email ya existe en Firebase Auth"
+            code="DUPLICATE_DNI",
+            message=f"DNI {student.dni} ya está registrado para esta universidad"
+        )
+
+    # Validate email is not already registered
+    if student.email and RedisCache.is_email_registered(student.email, university_id, "student"):
+        return fail(
+            status=409,
+            code="DUPLICATE_EMAIL",
+            message=f"Email {student.email} ya está registrado para esta universidad"
+        )
+
+    # Enqueue job to RQ
+    try:
+        q = Queue("students", connection=get_redis_connection())
+        student_dict = asdict(student)
+        job = q.enqueue(upsert_student_job, university_id, student_dict)
+
+        # Register in cache after successful enqueue
+        RedisCache.register_student(student.dni, student.email or "", university_id)
+
+        return ok(
+            status=202,
+            result="queued",
+            message="Estudiante encolado para procesamiento",
+            data={"job_id": job.id, "dni": student.dni}
         )
     except Exception as e:
         return fail(
             status=500,
-            code="UPSERT_ERROR",
-            message=str(e)
+            code="QUEUE_ERROR",
+            message=f"Error al encolar el estudiante: {str(e)}"
         )
 
 

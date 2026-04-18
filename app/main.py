@@ -21,6 +21,7 @@ from app.infrastructure.firebase.firebase_exceptions import FirebaseConfigError
 # Routers
 from app.delivery.http.routers.student_router import router as student_router
 from app.delivery.http.routers.company_router import router as company_router
+from app.delivery.http.routers.jobs_router import router as jobs_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -76,6 +77,7 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
 # 🔌 Routers
 app.include_router(student_router, prefix="/api/students", tags=["Students"])
 app.include_router(company_router, prefix="/api/companies", tags=["Companies"])
+app.include_router(jobs_router, prefix="/api/jobs", tags=["Jobs"])
 
 if __name__ == "__main__":
     import uvicorn

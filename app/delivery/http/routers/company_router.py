@@ -1,6 +1,7 @@
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.params import Depends
+from dataclasses import asdict
 
 from app.core.limiter import limiter
 from app.core.config import require_api_key
@@ -18,6 +19,10 @@ from fastapi import HTTPException
 from fastapi.params import Path
 from app.core.errors.api_errors import ApiErrorCode
 from app.core.dependencies import validate_university_id
+from rq import Queue
+from app.infrastructure.queue.redis_client import get_redis_connection
+from app.workers.company_tasks import upsert_company_job
+from app.infrastructure.cache.redis_cache import RedisCache
 
 router = APIRouter()
 
@@ -30,7 +35,7 @@ router = APIRouter()
 async def upsert_company(
     request: Request,
     body: CompanyDTO,
-    uc: UpsertCompanyUseCase = Depends(upsert_company_use_case)
+    university_id: str = Depends(validate_university_id)
 ):
     company = company_to_domain(body)
 
@@ -41,32 +46,46 @@ async def upsert_company(
             message="ruc is required for upsert"
         )
 
-    # El UC ya maneja internamente si es creación o actualización
-    try:
-        result = uc.execute(company)
-
-        message = "Company actualizado exitosamente" if result == "updated" else "Company creado exitosamente"
-        status_code = 200 if result == "updated" else 201
-
-        return ok(
-            status=status_code,
-            result=result,
-            message=message,
-            data={
-                "ruc": company.ruc
-            }
-        )
-    except CompanyUserEmailAlreadyExists as e:
+    # Validate RUC is not already registered
+    if RedisCache.is_ruc_registered(company.ruc, university_id):
         return fail(
             status=409,
-            code=ApiErrorCode.EMAIL_ALREADY_EXISTS,
-            message=str(e)
+            code="DUPLICATE_RUC",
+            message=f"RUC {company.ruc} ya está registrado para esta universidad"
+        )
+
+    # Validate company emails are not already registered
+    if company.users_companies:
+        for user in company.users_companies:
+            if user.email and RedisCache.is_email_registered(user.email, university_id, "company"):
+                return fail(
+                    status=409,
+                    code="DUPLICATE_EMAIL",
+                    message=f"Email {user.email} ya está registrado para esta universidad"
+                )
+
+    try:
+        q = Queue("companies", connection=get_redis_connection())
+        company_dict = asdict(company)
+        job = q.enqueue(upsert_company_job, university_id, company_dict)
+
+        # Register in cache after successful enqueue
+        company_email = ""
+        if company.users_companies and company.users_companies[0].email:
+            company_email = company.users_companies[0].email
+        RedisCache.register_company(company.ruc, company_email, university_id)
+
+        return ok(
+            status=202,
+            result="queued",
+            message="Empresa encolada para procesamiento",
+            data={"job_id": job.id, "ruc": company.ruc}
         )
     except Exception as e:
         return fail(
             status=500,
-            code="UPSERT_ERROR",
-            message=str(e)
+            code="QUEUE_ERROR",
+            message=f"Error al encolar la empresa: {str(e)}"
         )
 
 @router.post(

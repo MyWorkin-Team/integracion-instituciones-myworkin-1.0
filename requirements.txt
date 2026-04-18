@@ -6,3 +6,6 @@ slowapi
 email-validator
 pandas
 openpyxl
+redis
+rq
+python-dotenv
