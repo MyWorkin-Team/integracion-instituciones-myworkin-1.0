@@ -314,6 +314,66 @@ async def clear_queue(queue_name: str):
         )
 
 
+@router.get(
+    "/cache/entities",
+    response_model=ApiResponse[dict]
+)
+async def get_cached_entities():
+    """Get all cached entity keys (format: university_id:identifier:email)"""
+    try:
+        conn = get_redis_connection()
+        entities_data = {
+            "students": [],
+            "companies": []
+        }
+
+        for key in conn.scan_iter(match=f"{RedisCache.STUDENT_PREFIX}*"):
+            key_str = key.decode() if isinstance(key, bytes) else key
+            if not key_str.endswith(":data"):
+                entities_data["students"].append(key_str)
+
+        for key in conn.scan_iter(match=f"{RedisCache.COMPANY_PREFIX}*"):
+            key_str = key.decode() if isinstance(key, bytes) else key
+            if not key_str.endswith(":data"):
+                entities_data["companies"].append(key_str)
+
+        total = len(entities_data["students"]) + len(entities_data["companies"])
+        return ok(
+            status=200,
+            result="success",
+            message=f"Total: {total} cached entities",
+            data=entities_data
+        )
+    except Exception as e:
+        return fail(
+            status=500,
+            code="CACHE_ERROR",
+            message=f"Error al consultar datos: {str(e)}"
+        )
+
+
+@router.delete(
+    "/cache/entities",
+    response_model=ApiResponse[dict]
+)
+async def clear_cached_entities():
+    """Clear all cached entities"""
+    try:
+        RedisCache.clear_cache()
+        return ok(
+            status=200,
+            result="cleared",
+            message="All cached entities cleared successfully",
+            data={"status": "cleared"}
+        )
+    except Exception as e:
+        return fail(
+            status=500,
+            code="CACHE_ERROR",
+            message=f"Error al limpiar datos: {str(e)}"
+        )
+
+
 @router.delete(
     "/{job_id}",
     response_model=ApiResponse[dict]
@@ -383,68 +443,4 @@ async def get_job_status(job_id: str):
             status=404,
             code="JOB_NOT_FOUND",
             message=f"No se encontró el job: {str(e)}"
-        )
-
-
-@router.get(
-    "/cache/entities",
-    response_model=ApiResponse[dict]
-)
-async def get_cached_entities():
-    """Get all cached entity keys (format: university_id:identifier:email)"""
-    try:
-        conn = get_redis_connection()
-        entities_data = {
-            "students": [],
-            "companies": []
-        }
-
-        # Get all student keys (excluding :data suffix)
-        for key in conn.scan_iter(match=f"{RedisCache.STUDENT_PREFIX}*"):
-            key_str = key.decode() if isinstance(key, bytes) else key
-            # Exclude :data keys, only show main keys
-            if not key_str.endswith(":data"):
-                entities_data["students"].append(key_str)
-
-        # Get all company keys (excluding :data suffix)
-        for key in conn.scan_iter(match=f"{RedisCache.COMPANY_PREFIX}*"):
-            key_str = key.decode() if isinstance(key, bytes) else key
-            # Exclude :data keys, only show main keys
-            if not key_str.endswith(":data"):
-                entities_data["companies"].append(key_str)
-
-        total = len(entities_data["students"]) + len(entities_data["companies"])
-        return ok(
-            status=200,
-            result="success",
-            message=f"Total: {total} cached entities",
-            data=entities_data
-        )
-    except Exception as e:
-        return fail(
-            status=500,
-            code="CACHE_ERROR",
-            message=f"Error al consultar datos: {str(e)}"
-        )
-
-
-@router.delete(
-    "/cache/entities",
-    response_model=ApiResponse[dict]
-)
-async def clear_cached_entities():
-    """Clear all cached entities"""
-    try:
-        RedisCache.clear_cache()
-        return ok(
-            status=200,
-            result="cleared",
-            message="All cached entities cleared successfully",
-            data={"status": "cleared"}
-        )
-    except Exception as e:
-        return fail(
-            status=500,
-            code="CACHE_ERROR",
-            message=f"Error al limpiar datos: {str(e)}"
         )

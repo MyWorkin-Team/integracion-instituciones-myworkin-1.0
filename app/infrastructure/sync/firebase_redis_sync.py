@@ -3,6 +3,7 @@ from app.infrastructure.queue.redis_client import get_redis_connection
 from app.infrastructure.cache.redis_cache import RedisCache
 from app.config.di_student import init_firebase as init_firebase_student
 from app.config.di_company import init_firebase as init_firebase_company
+from app.infrastructure.firebase.firebase_exceptions import FirebaseConfigError
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,9 @@ def sync_firebase_to_redis(university_id: str):
                     logger.error(f"Error syncing student {doc.id}: {str(e)}")
 
             logger.info(f"✓ Synced {student_count} students for {university_id}")
+        except FirebaseConfigError:
+            logger.debug(f"Firebase no configurado para {university_id}, omitiendo sync de students")
+            return
         except Exception as e:
             logger.error(f"Error syncing students for {university_id}: {str(e)}")
 
@@ -87,6 +91,8 @@ def sync_firebase_to_redis(university_id: str):
                     logger.error(f"Error syncing company {doc.id}: {str(e)}")
 
             logger.info(f"✓ Synced {company_count} companies for {university_id}")
+        except FirebaseConfigError:
+            logger.debug(f"Firebase no configurado para {university_id}, omitiendo sync de companies")
         except Exception as e:
             logger.error(f"Error syncing companies for {university_id}: {str(e)}")
 

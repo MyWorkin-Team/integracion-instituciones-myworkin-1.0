@@ -32,6 +32,13 @@ class RedisCache:
         return False, None
 
     @staticmethod
+    def is_dni_registered(dni: str, university_id: str) -> bool:
+        """Check if student DNI already exists for university"""
+        conn = get_redis_connection()
+        pattern = f"{RedisCache.STUDENT_PREFIX}{university_id}:{dni}:*"
+        return any(conn.scan_iter(match=pattern))
+
+    @staticmethod
     def is_ruc_registered(ruc: str, university_id: str) -> bool:
         """Check if RUC already exists for university"""
         conn = get_redis_connection()
@@ -43,11 +50,14 @@ class RedisCache:
         """Register student in cache with university_id:dni:email format"""
         conn = get_redis_connection()
         email_lower = email.lower() if email else "no-email"
-        key = f"{RedisCache.STUDENT_PREFIX}{university_id}:{dni}:{email_lower}"
 
+        # Delete all existing keys for this dni (handles email changes)
+        for old_key in conn.scan_iter(match=f"{RedisCache.STUDENT_PREFIX}{university_id}:{dni}:*"):
+            conn.delete(old_key)
+
+        key = f"{RedisCache.STUDENT_PREFIX}{university_id}:{dni}:{email_lower}"
         conn.setex(key, RedisCache.DEFAULT_TTL, "1")
 
-        # Store full data
         if student_data:
             conn.setex(f"{key}:data", RedisCache.DEFAULT_TTL, json.dumps(student_data, default=str))
 
@@ -56,11 +66,14 @@ class RedisCache:
         """Register company in cache with university_id:ruc:email format"""
         conn = get_redis_connection()
         email_lower = email.lower() if email else "no-email"
-        key = f"{RedisCache.COMPANY_PREFIX}{university_id}:{ruc}:{email_lower}"
 
+        # Delete all existing keys for this ruc (handles email changes)
+        for old_key in conn.scan_iter(match=f"{RedisCache.COMPANY_PREFIX}{university_id}:{ruc}:*"):
+            conn.delete(old_key)
+
+        key = f"{RedisCache.COMPANY_PREFIX}{university_id}:{ruc}:{email_lower}"
         conn.setex(key, RedisCache.DEFAULT_TTL, "1")
 
-        # Store full data
         if company_data:
             conn.setex(f"{key}:data", RedisCache.DEFAULT_TTL, json.dumps(company_data, default=str))
 

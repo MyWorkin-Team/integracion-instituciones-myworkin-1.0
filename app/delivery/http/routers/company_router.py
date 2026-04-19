@@ -47,6 +47,8 @@ async def upsert_company(
             message="ruc is required for upsert"
         )
 
+    ruc_already_registered = RedisCache.is_ruc_registered(company.ruc, university_id)
+
     # Validate company emails globally (Cascading: Redis → Firebase)
     if company.users_companies:
         for user in company.users_companies:
@@ -110,12 +112,10 @@ async def upsert_company(
         }
         RedisCache.register_company(company.ruc, company_email, university_id, cache_data)
 
-        return ok(
-            status=202,
-            result="queued",
-            message="Empresa encolada para procesamiento",
-            data={"job_id": job.id, "ruc": company.ruc}
-        )
+        if ruc_already_registered:
+            return ok(status=200, result="updated", message="Empresa actualizada exitosamente", data={"ruc": company.ruc})
+        else:
+            return ok(status=201, result="created", message="Empresa creada exitosamente", data={"ruc": company.ruc})
     except Exception as e:
         return fail(
             status=500,

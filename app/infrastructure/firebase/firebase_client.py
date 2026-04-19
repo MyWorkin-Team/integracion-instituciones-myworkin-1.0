@@ -43,7 +43,6 @@ def init_firebase(university_id: str):
             _service_accounts_cache[university_id] = service_account_json
 
     if not service_account_json:
-        logger.error(f"Configuración faltante para universidad: {university_id}")
         raise FirebaseConfigError(f"La configuración de Firebase para {university_id} no está configurada")
 
     try:

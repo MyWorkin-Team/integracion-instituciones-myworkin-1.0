@@ -50,9 +50,11 @@ async def upsert_student(
             message="dni is required for upsert"
         )
 
-    # Validate email globally (Cascading: Redis → Firebase)
-    if student.email:
-        # Check Redis first
+    # Si el DNI ya existe en cache → es un update, no validar email como duplicado
+    dni_already_registered = RedisCache.is_dni_registered(student.dni, university_id)
+
+    if student.email and not dni_already_registered:
+        # Solo validar email para nuevos registros
         exists_in_redis, redis_type = RedisCache.is_email_registered_globally(student.email)
         if exists_in_redis:
             return fail(
@@ -61,7 +63,6 @@ async def upsert_student(
                 message=f"Email {student.email} ya está registrado como {redis_type} en el sistema"
             )
 
-        # Check Firebase (authority)
         exists_in_firebase, firebase_type = FirebaseValidator.email_exists_globally(student.email)
         if exists_in_firebase:
             return fail(
@@ -89,12 +90,10 @@ async def upsert_student(
         }
         RedisCache.register_student(student.dni, student.email or "", university_id, cache_data)
 
-        return ok(
-            status=202,
-            result="queued",
-            message="Estudiante encolado para procesamiento",
-            data={"job_id": job.id, "dni": student.dni}
-        )
+        if dni_already_registered:
+            return ok(status=200, result="updated", message="Estudiante actualizado exitosamente", data={"dni": student.dni})
+        else:
+            return ok(status=201, result="created", message="Estudiante creado exitosamente", data={"dni": student.dni})
     except Exception as e:
         return fail(
             status=500,
