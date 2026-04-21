@@ -1,4 +1,6 @@
 import logging
+import os
+from firebase_admin import firestore
 from app.infrastructure.queue.redis_client import get_redis_connection
 from app.infrastructure.cache.redis_cache import RedisCache
 from app.config.di_student import init_firebase as init_firebase_student
@@ -6,6 +8,12 @@ from app.config.di_company import init_firebase as init_firebase_company
 from app.infrastructure.firebase.firebase_exceptions import FirebaseConfigError
 
 logger = logging.getLogger(__name__)
+
+
+def get_configured_universities() -> list[str]:
+    """Get list of configured universities from ALLOWED_UNIVERSITIES"""
+    universities_str = os.getenv("ALLOWED_UNIVERSITIES", "UNT,UTEST")
+    return [uni.strip() for uni in universities_str.split(",") if uni.strip()]
 
 
 def sync_firebase_to_redis(university_id: str):
@@ -16,7 +24,7 @@ def sync_firebase_to_redis(university_id: str):
         # Sync students
         try:
             app = init_firebase_student(university_id)
-            db = app.firestore()
+            db = firestore.client(app=app)
             students_ref = db.collection("universities").document(university_id).collection("students")
 
             student_count = 0
@@ -52,7 +60,7 @@ def sync_firebase_to_redis(university_id: str):
         # Sync companies
         try:
             app = init_firebase_company(university_id)
-            db = app.firestore()
+            db = firestore.client(app=app)
             companies_ref = db.collection("universities").document(university_id).collection("companies")
 
             company_count = 0
@@ -103,8 +111,7 @@ def sync_firebase_to_redis(university_id: str):
 
 def sync_all_universities():
     """Sync all configured universities from Firebase to Redis"""
-    # Get list of universities from environment or config
-    universities = ["UNT", "UTEST"]  # TODO: Load from config/env
+    universities = get_configured_universities()
 
     logger.info(f"Starting Firebase→Redis sync for all universities: {universities}")
 

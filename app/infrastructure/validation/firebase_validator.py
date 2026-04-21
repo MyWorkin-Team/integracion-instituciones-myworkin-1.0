@@ -1,8 +1,15 @@
 import logging
+import os
 from app.config.di_student import init_firebase as init_firebase_student
 from app.config.di_company import init_firebase as init_firebase_company
 
 logger = logging.getLogger(__name__)
+
+
+def get_configured_universities() -> list[str]:
+    """Get list of configured universities from environment"""
+    universities_str = os.getenv("CONFIGURED_UNIVERSITIES", "UNT,UTEST")
+    return [uni.strip() for uni in universities_str.split(",") if uni.strip()]
 
 
 class FirebaseValidator:
@@ -14,9 +21,7 @@ class FirebaseValidator:
         Returns: (exists, entity_type) where entity_type is 'student', 'company', or None
         """
         email_lower = email.lower()
-
-        # List of configured universities to check
-        universities = ["UNT", "UTEST"]
+        universities = get_configured_universities()
 
         # Check all universities for students
         for uni in universities:
