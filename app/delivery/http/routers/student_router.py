@@ -39,8 +39,8 @@ router = APIRouter()
 async def upsert_student(
     request: Request,
     body: StudentDTO,
-    university_id: str = Depends(validate_university_id)
 ):
+    university_id = body.university_id
     student = student_to_domain(body)
 
     if not student.dni:

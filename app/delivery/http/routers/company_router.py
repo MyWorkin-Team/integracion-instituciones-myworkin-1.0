@@ -36,7 +36,6 @@ router = APIRouter()
 async def upsert_company(
     request: Request,
     body: CompanyDTO,
-    university_id: str = Depends(validate_university_id)
 ):
     company = company_to_domain(body)
 
