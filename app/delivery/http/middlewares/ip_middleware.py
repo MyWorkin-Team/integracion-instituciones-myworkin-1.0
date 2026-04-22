@@ -10,8 +10,6 @@ from app.config.security import (
     ALLOWED_UNIVERSITIES,
 )
 
-logger = logging.getLogger("security")
-
 class ApiKeyMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
@@ -25,7 +23,6 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
         # 🔐 Obtener API Key de cabecera
         api_key_received = request.headers.get("x-api-key")
 
-        logger.info(f"Middleware: Checking API key for path {path}. Received API key: {api_key_received}")
         if not api_key_received:
             return self._unauthorized("x-api-key header missing")
 
@@ -47,7 +44,6 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
             except Exception as e:
                 logger.error(f"Error parsing body in middleware: {e}")
 
-        print(f"Middleware: Received request for {path} with university_id={university_id} and api_key={api_key_received}")
         if not university_id:
             return JSONResponse(
                 status_code=400,

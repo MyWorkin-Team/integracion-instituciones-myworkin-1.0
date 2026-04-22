@@ -53,25 +53,7 @@ async def upsert_student(
     # Si el DNI ya existe en cache → es un update, no validar email como duplicado
     dni_already_registered = RedisCache.is_dni_registered(student.dni, university_id)
 
-    if student.email and not dni_already_registered:
-        # Solo validar email para nuevos registros
-        exists_in_redis, redis_type = RedisCache.is_email_registered_globally(student.email)
-        if exists_in_redis:
-            return fail(
-                status=409,
-                code="DUPLICATE_EMAIL",
-                message=f"Email {student.email} ya está registrado como {redis_type} en el sistema"
-            )
-
-        exists_in_firebase, firebase_type = FirebaseValidator.email_exists_globally(student.email)
-        if exists_in_firebase:
-            return fail(
-                status=409,
-                code="DUPLICATE_EMAIL",
-                message=f"Email {student.email} ya existe como {firebase_type} en el sistema"
-            )
-
-    # Enqueue job to RQ
+    # Enqueue job to RQ (validación de email se hace en el worker)
     try:
         q = Queue("students", connection=get_redis_connection())
         student_dict = asdict(student)

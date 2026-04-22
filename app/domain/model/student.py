@@ -4,12 +4,19 @@ from datetime import datetime
 
 
 @dataclass
+class Degree:
+    displayName: str
+    embedding: list[float]
+    id: str
+
+@dataclass
 class Student:
     """
     Modelo de dominio para estudiantes.
     Actualizado según el esquema solicitado.
     """
     career: Optional[str] = None
+    degree: Optional[Degree] = None
     createdAt: Optional[datetime] = None
     createdFrom: Optional[str] = None
     cycle: Optional[int] = None
@@ -30,4 +37,7 @@ class Student:
     def to_firestore_dict(self) -> dict:
         """Convierte a diccionario para Firestore, excluyendo valores None."""
         data = asdict(self)
+        # Convertir Degree a diccionario si existe
+        if self.degree:
+            data['degree'] = asdict(self.degree)
         return {k: v for k, v in data.items() if v is not None}
