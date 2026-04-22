@@ -6,7 +6,8 @@ slowapi
 email-validator
 pandas
 openpyxl
-redis
-rq
+redis==5.0.7
+rq==1.16.1
 python-dotenv
 google-generativeai
+protobuf==5.29.3
