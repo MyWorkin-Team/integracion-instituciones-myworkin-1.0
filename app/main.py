@@ -29,6 +29,7 @@ from app.infrastructure.sync.firebase_redis_sync import sync_all_universities
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    force=True,
 )
 
 app = FastAPI(

@@ -26,12 +26,12 @@ def upsert_company_job(university_id: str, company_dict: dict) -> str:
     company_email = ""
     users_data = []
     if company.users_companies:
-        company_email = company.users_companies[0].email or ""
+        company_email = company.users_companies[0].get("email", "")
         for user in company.users_companies:
             users_data.append({
-                "email": user.email,
-                "firstName": user.firstName,
-                "lastName": user.lastName
+                "email": user.get("email"),
+                "firstName": user.get("firstName"),
+                "lastName": user.get("lastName"),
             })
 
     cache_data = {

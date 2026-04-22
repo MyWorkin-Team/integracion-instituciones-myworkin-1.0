@@ -37,6 +37,7 @@ async def upsert_company(
     request: Request,
     body: CompanyDTO,
 ):
+    university_id = body.university_id
     company = company_to_domain(body)
 
     if company.ruc is None or company.ruc == "":
