@@ -71,6 +71,7 @@ class UpsertStudentUseCase:
             student.createdAt = datetime.now(timezone.utc)
             student.updatedAt = student.createdAt
             student.searchTokens = generate_search_tokens(student.displayName)
+            student.forcePasswordChangeOnNextLogin = True
 
             # Guardar en Firestore
             self.repo.save(uid, student)

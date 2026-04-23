@@ -28,7 +28,6 @@ class Company:
     roles: Optional[dict] = None
     status: Optional[str] = None
     users_companies: Optional[List[dict]] = None
-    forcePasswordChangeOnNextLogin: bool = True
 
     # === RESPONSE (solo lectura) ===
     id: Optional[str] = None

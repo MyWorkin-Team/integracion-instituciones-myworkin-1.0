@@ -81,6 +81,7 @@ class UpsertCompanyUseCase:
                 "role": "owner",
                 "status": "active",
                 "companyId": company.id,
+                "forcePasswordChangeOnNextLogin": True,
             }
             try:
                 auth_user = get_firebase_user_by_email(self.repo.app, company.email)
@@ -175,6 +176,8 @@ class UpsertCompanyUseCase:
                         )
 
                         relation["uid"] = uid
+                        # Solo al crear nuevo usuario, forzar cambio de contraseña
+                        relation["forcePasswordChangeOnNextLogin"] = True
 
                 except CompanyUserEmailAlreadyExists:
                     raise

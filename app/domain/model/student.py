@@ -30,7 +30,7 @@ class Student:
     university: Optional[str] = None
     updatedAt: Optional[datetime] = None
     userType: str = "student"
-    forcePasswordChangeOnNextLogin: bool = True
+    forcePasswordChangeOnNextLogin: Optional[bool] = None
 
     # Identificadores técnicos necesarios para persistencia/API
     id: Optional[str] = None
