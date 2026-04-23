@@ -39,7 +39,6 @@ async def upsert_company(
     request: Request,
     body: CompanyDTO,
 ):
-    logging.info(f"Received upsert_company request with body: {body}")
     university_id = body.university_id
     company = company_to_domain(body)
 
@@ -52,22 +51,21 @@ async def upsert_company(
 
     ruc_already_registered = RedisCache.is_ruc_registered(company.ruc, university_id)
 
-    logging.info(f"RUC {company.ruc} already registered: {ruc_already_registered}")
     # Validar que al crear, debe tener users_companies con al mínimo un CEO
     if not ruc_already_registered:
         if not company.users_companies or len(company.users_companies) == 0:
             return fail(
                 status=400,
                 code="MISSING_USERS_COMPANIES",
-                message="Al crear una empresa, debe proporcionar al menos un usuario con rol 'ceo' en users_companies"
+                message="Al crear una empresa, debe proporcionar al menos un usuario con rol 'owner' en users_companies"
             )
 
-        ceo_exists = any(user.get("role") == "ceo" for user in company.users_companies if isinstance(user, dict))
-        if not ceo_exists:
+        owner_exists = any(user.get("role") == "owner" for user in company.users_companies if isinstance(user, dict))
+        if not owner_exists:
             return fail(
                 status=400,
-                code="MISSING_CEO",
-                message="Al crear una empresa, debe haber al menos un usuario con rol 'ceo'"
+                code="MISSING_OWNER",
+                message="Al crear una empresa, debe haber al menos un usuario con rol 'owner'"
             )
 
     # Validate company emails globally (Cascading: Redis → Firebase)
@@ -97,41 +95,6 @@ async def upsert_company(
         q = Queue("companies", connection=get_redis_connection())
         company_dict = asdict(company)
         job = q.enqueue(upsert_company_job, university_id, company_dict)
-
-        # Register in cache with full data after successful enqueue
-        company_email = ""
-        users_data = []
-        if company.users_companies:
-            first_user = company.users_companies[0]
-            company_email = first_user.email if hasattr(first_user, 'email') else first_user.get("email", "") if isinstance(first_user, dict) else ""
-
-            for user in company.users_companies:
-                if hasattr(user, 'email'):
-                    # Object with attributes
-                    users_data.append({
-                        "email": user.email,
-                        "firstName": user.firstName,
-                        "lastName": user.lastName
-                    })
-                elif isinstance(user, dict):
-                    # Dictionary
-                    users_data.append({
-                        "email": user.get("email"),
-                        "firstName": user.get("firstName"),
-                        "lastName": user.get("lastName")
-                    })
-
-        cache_data = {
-            "university_id": university_id,
-            "ruc": company.ruc,
-            "displayName": company.displayName,
-            "sector": company.sector,
-            "phone": company.phone,
-            "users_companies": users_data,
-            "createdAt": str(company.createdAt) if company.createdAt else None,
-            "updatedAt": str(company.updatedAt) if company.updatedAt else None,
-        }
-        RedisCache.register_company(company.ruc, company_email, university_id, cache_data)
 
         if ruc_already_registered:
             return ok(status=200, result="updated", message="Empresa actualizada exitosamente", data={"ruc": company.ruc})

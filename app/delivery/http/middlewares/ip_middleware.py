@@ -10,6 +10,8 @@ from app.config.security import (
     ALLOWED_UNIVERSITIES,
 )
 
+logger = logging.getLogger(__name__)
+
 class ApiKeyMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
@@ -35,14 +37,26 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
                 if body_bytes:
                     body_json = json.loads(body_bytes)
                     university_id = body_json.get("university_id")
-                
+
                 # Re-crear el request para que el siguiente handler pueda leer el body
                 async def receive():
                     return {"type": "http.request", "body": body_bytes}
                 request._receive = receive
-                
+
             except Exception as e:
                 logger.error(f"Error parsing body in middleware: {e}")
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "status": 400,
+                        "label": "Bad Request",
+                        "description": "El cuerpo de la petición es inválido",
+                        "body": {
+                            "error": "Bad Request",
+                            "message": f"Error al procesar el cuerpo de la petición: {str(e)}"
+                        }
+                    }
+                )
 
         if not university_id:
             return JSONResponse(

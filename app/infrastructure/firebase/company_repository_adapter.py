@@ -68,14 +68,20 @@ class CompanyRepositoryAdapter(CompanyRepositoryPort):
     def save(self, company: Company) -> str:
         """
         Guarda por document ID = company.id
-        (igual que Student, merge=True)
+        Si no tiene ID, genera uno automáticamente.
+        Retorna el ID del documento.
         """
-        ref = self.collection.document(company.id)
+        if not company.id:
+            ref = self.collection.document()
+            company.id = ref.id
+        else:
+            ref = self.collection.document(company.id)
+
         exists = ref.get().exists
         # Usamos el método to_firestore_dict si existe o convertimos a dict
         data = company.to_firestore_dict() if hasattr(company, 'to_firestore_dict') else company.__dict__
         ref.set(data, merge=True)
-        return "updated" if exists else "created"
+        return company.id
 
     # -------------------------------------------------
     # GET BY ruc

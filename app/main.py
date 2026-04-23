@@ -1,5 +1,7 @@
 import sys
 from pathlib import Path
+import re
+import json
 
 # Agregar el directorio raíz del proyecto al PYTHONPATH
 project_root = Path(__file__).parent.parent
@@ -11,6 +13,7 @@ from fastapi.exceptions import RequestValidationError
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi.errors import RateLimitExceeded
 from starlette.responses import JSONResponse, HTMLResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 import logging
 
 from app.core.dto.api_response import validation_exception_handler
@@ -31,6 +34,18 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
     force=True,
 )
+
+class JSONCleanerMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.method in ["POST", "PUT", "PATCH"] and "application/json" in request.headers.get("content-type", ""):
+            body = await request.body()
+            try:
+                text = body.decode("utf-8")
+                cleaned = re.sub(r',\s*([}\]])', r'\1', text)
+                request._body = cleaned.encode("utf-8")
+            except Exception:
+                pass
+        return await call_next(request)
 
 app = FastAPI(
     title="Integración Instituciones - MyWorkIn",
@@ -120,6 +135,7 @@ async def firebase_config_error_handler(request: Request, exc: FirebaseConfigErr
     )
 
 # 🔐 Middlewares
+app.add_middleware(JSONCleanerMiddleware)
 app.add_middleware(ApiKeyMiddleware)
 
 # Rate limit

@@ -12,10 +12,10 @@ class UserCompanyDTO(BaseModel):
         description="Correo electrónico del usuario. Debe ser único en todo el sistema.",
         examples=["reclutador@empresa.com"],
     )
-    role: Literal["ceo", "admin", "recruiter"] = Field(
+    role: Literal["owner", "admin"] = Field(
         ...,
-        description="Rol del usuario dentro de la empresa. Valores válidos: 'ceo' (propietario/CEO), 'admin' (gestor de cuenta), 'recruiter' (publicador de ofertas)",
-        examples=["ceo"],
+        description="Rol del usuario dentro de la empresa. Valores válidos: 'owner' (propietario), 'admin' (administrador)",
+        examples=["owner"],
     )
     status: Literal["active", "inactive"] = Field(
         ...,
@@ -96,7 +96,7 @@ class CompanyDTO(BaseModel):
     )
     users_companies: Optional[List[UserCompanyDTO]] = Field(
         None,
-        description="Lista de usuarios vinculados a la empresa con su rol y estado. OBLIGATORIO: Al crear una empresa, debe incluir al menos un usuario con role='ceo'. Cada usuario debe tener un email único en el sistema.",
+        description="Lista de usuarios vinculados a la empresa con su rol y estado. OBLIGATORIO: Al crear una empresa, debe incluir al menos un usuario con role='owner'. Cada usuario debe tener un email único en el sistema.",
     )
     model_config = ConfigDict(extra="allow")
 
