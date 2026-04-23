@@ -35,14 +35,13 @@ class UpsertCompanyUseCase:
             self.repo.update_by_ruc(company.ruc, company.to_firestore_dict())
             owner_uid, roles = self._save_relations(company)
 
-            # Si existe un owner, actualizar la company con su UID y roles
-            if owner_uid or roles:
-                update_data = {}
-                if owner_uid:
-                    update_data["ownerId"] = owner_uid
-                if roles:
-                    update_data["roles"] = roles
-                self.repo.update_by_ruc(company.ruc, update_data)
+            # Si existe un owner, actualizar la company con su UID
+            if owner_uid:
+                self.repo.update_by_ruc(company.ruc, {"ownerId": owner_uid})
+
+            # Mezclar roles nuevos con existentes
+            if roles:
+                self.repo.merge_roles_by_ruc(company.ruc, roles)
 
             return "updated"
         
@@ -55,14 +54,13 @@ class UpsertCompanyUseCase:
 
         owner_uid, roles = self._save_relations(company)
 
-        # Si existe un owner, actualizar la company con su UID y roles
-        if owner_uid or roles:
-            update_data = {}
-            if owner_uid:
-                update_data["ownerId"] = owner_uid
-            if roles:
-                update_data["roles"] = roles
-            self.repo.update_by_ruc(company.ruc, update_data)
+        # Si existe un owner, actualizar la company con su UID
+        if owner_uid:
+            self.repo.update_by_ruc(company.ruc, {"ownerId": owner_uid})
+
+        # Mezclar roles
+        if roles:
+            self.repo.merge_roles_by_ruc(company.ruc, roles)
 
         return "created"
 

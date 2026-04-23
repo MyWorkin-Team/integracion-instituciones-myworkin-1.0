@@ -121,6 +121,28 @@ class CompanyRepositoryAdapter(CompanyRepositoryPort):
         docs[0].reference.update(data)
         return True
 
+    def merge_roles_by_ruc(self, ruc: str, new_roles: dict) -> bool:
+        """Mezcla los roles nuevos con los existentes sin reemplazar"""
+        docs = (
+            self.collection
+            .where(filter=FieldFilter("ruc", "==", ruc))
+            .limit(1)
+            .stream()
+        )
+
+        docs = list(docs)
+        if not docs:
+            return False
+
+        existing_doc = docs[0].to_dict()
+        existing_roles = existing_doc.get("roles", {})
+
+        # Mezclar roles nuevos con existentes
+        merged_roles = {**existing_roles, **new_roles}
+
+        docs[0].reference.update({"roles": merged_roles})
+        return True
+
     # -------------------------------------------------
     # FIND USER-COMPANY BY EMAIL
     # -------------------------------------------------
