@@ -50,10 +50,10 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
                     content={
                         "status": 400,
                         "label": "Bad Request",
-                        "description": "El cuerpo de la petición es inválido",
+                        "description": "Request body is invalid",
                         "body": {
                             "error": "Bad Request",
-                            "message": f"Error al procesar el cuerpo de la petición: {str(e)}"
+                            "message": f"Error processing request body: {str(e)}"
                         }
                     }
                 )
@@ -65,19 +65,19 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
                     "status": 400,
                     "label": "Bad Request",
                     "description": "university_id missing",
-                    "body": {"error": "Bad Request", "message": "university_id es requerido en el body."}
+                    "body": {"error": "Bad Request", "message": "university_id is required in the request body."}
                 }
             )
 
         # ✅ Validar que la universidad esté en la lista de permitidas
         university_id_upper = university_id.upper()
         if university_id_upper not in ALLOWED_UNIVERSITIES:
-            return self._unauthorized(f"Universidad '{university_id}' no está autorizada.")
+            return self._unauthorized(f"University '{university_id}' is not authorized.")
 
         # 🔑 Verificar Key para esa universidad
         expected_key = UNIVERSITY_API_KEYS.get(university_id_upper)
         if not expected_key or api_key_received != expected_key:
-            return self._unauthorized("API key inválida para la universidad especificada.")
+            return self._unauthorized("Invalid API key for the specified university.")
 
         return await call_next(request)
 
@@ -87,7 +87,7 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
             content={
                 "status": 401,
                 "label": "Unauthorized",
-                "description": "Acceso denegado",
+                "description": "Access denied",
                 "body": {"error": "Unauthorized", "message": message}
             }
         )

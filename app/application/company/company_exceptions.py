@@ -4,4 +4,4 @@ class CompanyError(Exception):
 class CompanyUserEmailAlreadyExists(CompanyError):
     def __init__(self, email: str):
         self.email = email
-        super().__init__(f"El email {email} ya se encuentra registrado en el sistema.")
+        super().__init__(f"Email {email} is already registered in the system.")

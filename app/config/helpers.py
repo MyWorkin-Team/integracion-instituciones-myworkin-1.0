@@ -34,7 +34,7 @@ import json
 def ok(
     data: any = None,
     *,
-    message: str = "Operación exitosa",
+    message: str = "Operation successful",
     result: Optional[str] = None,
     status: int = 200
 ) -> JSONResponse:

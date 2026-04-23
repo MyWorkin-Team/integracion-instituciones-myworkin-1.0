@@ -39,7 +39,7 @@ async def validate_university_id(request: Request, university_id: Optional[str] 
         # 2. Generas el error con TU función fail
         error_response = fail(
             code="INVALID_UNIVERSITY",
-            message=f"La universidad {university_id} no está permitida",
+            message=f"University {university_id} is not allowed",
             status=403
         )
         

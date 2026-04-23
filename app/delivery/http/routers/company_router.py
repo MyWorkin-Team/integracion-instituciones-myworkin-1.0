@@ -33,38 +33,38 @@ logger = logging.getLogger(__name__)
     "/push",
     dependencies=[Depends(require_api_key), Depends(validate_university_id)],
     response_model=ApiResponse[dict],
-    summary="Crear o actualizar empresa",
+    summary="Create or update company",
     description="""
-Crea o actualiza una empresa en el sistema.
+Creates or updates a company in the system.
 
-**Comportamiento:**
-- **Crear**: Si el RUC no existe, se crea una nueva empresa
-- **Actualizar**: Si el RUC ya existe, se actualiza la empresa existente
+**Behavior:**
+- **Create**: If the tax ID (RUC) does not exist, a new company is created
+- **Update**: If the tax ID (RUC) already exists, the existing company is updated
 
-**Campos requeridos:**
-- `university_id`: Identificador de la universidad (ej: UCC-TEST, UCSUR)
-- `displayName`: Nombre comercial (mín. 2 caracteres)
-- `ruc`: Número de identificación tributaria (acepta también 'cuit' que se mapea a 'ruc')
-- `email`: Correo electrónico de contacto
+**Required fields:**
+- `university_id`: University identifier (e.g., UCC-TEST, UCSUR)
+- `displayName`: Company name (min. 2 characters)
+- `ruc`: Tax identification number (also accepts 'cuit' which is mapped to 'ruc')
+- `email`: Contact email address
 
-**Campos opcionales:**
-- `logotype`: URL del logo
-- `description`: Descripción de la empresa
-- `website`: Sitio web oficial
-- `representative`: Nombre del representante legal
-- `sector`: Sector/industria
-- `phone`: Teléfono (solo dígitos)
-- `status`: "active" (defecto) o "inactive"
+**Optional fields:**
+- `logotype`: Logo URL
+- `description`: Company description
+- `website`: Official website
+- `representative`: Legal representative name
+- `sector`: Industry/sector
+- `phone`: Phone number (digits only)
+- `status`: "active" (default) or "inactive"
 
-**Automático al crear:**
-- Se crea automáticamente un usuario con rol 'owner' usando el email de la empresa
-- La contraseña del usuario es el RUC de la empresa
-- Se marca `forcePasswordChangeOnNextLogin: true`
+**Automatic on creation:**
+- An 'owner' role user is automatically created using the company email
+- The user password is the company's tax ID (RUC)
+- `forcePasswordChangeOnNextLogin` is set to true
 
-**Validaciones:**
-- El email debe ser único en el sistema (no puede ser usado por estudiantes u otras empresas)
-- El RUC solo puede contener letras, números y guiones
-- El teléfono solo puede contener dígitos
+**Validations:**
+- Email must be unique in the system (cannot be used by students or other companies)
+- Tax ID (RUC) can only contain letters, numbers, and hyphens
+- Phone can only contain digits
     """,
 )
 @limiter.limit("3000/minute")
@@ -95,7 +95,7 @@ async def upsert_company(
                     return fail(
                         status=409,
                         code="DUPLICATE_EMAIL",
-                        message=f"Email {user_email} ya está registrado como {redis_type} en el sistema"
+                        message=f"Email {user_email} is already registered as {redis_type} in the system"
                     )
 
                 # Check Firebase (authority)
@@ -104,7 +104,7 @@ async def upsert_company(
                     return fail(
                         status=409,
                         code="DUPLICATE_EMAIL",
-                        message=f"Email {user_email} ya existe como {firebase_type} en el sistema"
+                        message=f"Email {user_email} already exists as {firebase_type} in the system"
                     )
 
     try:
@@ -113,14 +113,14 @@ async def upsert_company(
         job = q.enqueue(upsert_company_job, university_id, company_dict)
 
         if ruc_already_registered:
-            return ok(status=200, result="updated", message="Empresa actualizada exitosamente", data={"ruc": company.ruc})
+            return ok(status=200, result="updated", message="Company updated successfully", data={"ruc": company.ruc})
         else:
-            return ok(status=201, result="created", message="Empresa creada exitosamente", data={"ruc": company.ruc})
+            return ok(status=201, result="created", message="Company created successfully", data={"ruc": company.ruc})
     except Exception as e:
         return fail(
             status=500,
             code="QUEUE_ERROR",
-            message=f"Error al encolar la empresa: {str(e)}"
+            message=f"Error queuing company: {str(e)}"
         )
 
 @router.post(
@@ -151,11 +151,11 @@ async def pull_company(
     if not company:
         return fail(
             code="COMPANY_NOT_FOUND",
-            message="No se encontró una empresa con el RUC especificado",
+            message="Company not found with the specified tax ID",
             status=404
         )
 
     return ok(
         company,
-        message="Empresa obtenida correctamente"
+        message="Company retrieved successfully"
     )

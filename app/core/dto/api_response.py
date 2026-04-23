@@ -22,25 +22,8 @@ class ApiResponse(BaseModel, Generic[T]):
     error: Optional[ApiError] = None
 
 def _translate_validation_message(msg: str, ctx: dict = None) -> str:
-    translations = {
-        "Input should be": "Debe ser",
-        "or": "o",
-        "Field required": "Campo requerido",
-        "String should have at least": "El texto debe tener al menos",
-        "characters": "caracteres",
-        "Invalid email": "Correo electrónico inválido",
-        "value_error.pattern": "No cumple con el formato requerido",
-    }
-
-    result = msg
-    for en, es in translations.items():
-        result = result.replace(en, es)
-
-    if "Input should be" in msg and ctx and "expected" in ctx:
-        expected = str(ctx.get("expected", ""))
-        result = f"Debe ser {expected}"
-
-    return result
+    # Keep validation messages in English
+    return msg
 
 def _serialize_errors(errors: list) -> list:
     result = []
@@ -72,10 +55,10 @@ async def validation_exception_handler(
         content={
             "status": 400,
             "label": "Bad Request",
-            "description": "Datos inválidos",
+            "description": "Invalid data",
             "body": {
                 "error": "Bad Request",
-                "message": "El cuerpo de la petición contiene datos inválidos o mal formateados.",
+                "message": "The request body contains invalid or malformed data.",
                 "details": _serialize_errors(exc.errors())
             }
         }

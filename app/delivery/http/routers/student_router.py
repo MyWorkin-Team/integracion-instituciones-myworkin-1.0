@@ -53,35 +53,41 @@ async def upsert_student(
     # Si el DNI ya existe en cache → es un update, no validar email como duplicado
     dni_already_registered = RedisCache.is_dni_registered(student.dni, university_id)
 
-    # Enqueue job to RQ (validación de email se hace en el worker)
+    # Validate student email globally (Cascading: Redis → Firebase) only for new students
+    if student.email and not dni_already_registered:
+        # Check Redis first
+        exists_in_redis, redis_type = RedisCache.is_email_registered_globally(student.email)
+        if exists_in_redis:
+            return fail(
+                status=409,
+                code="DUPLICATE_EMAIL",
+                message=f"Email {student.email} is already registered as {redis_type} in the system"
+            )
+
+        # Check Firebase (authority)
+        exists_in_firebase, firebase_type = FirebaseValidator.email_exists_globally(student.email)
+        if exists_in_firebase:
+            return fail(
+                status=409,
+                code="DUPLICATE_EMAIL",
+                message=f"Email {student.email} already exists as {firebase_type} in the system"
+            )
+
+    # Enqueue job to RQ
     try:
         q = Queue("students", connection=get_redis_connection())
         student_dict = asdict(student)
         job = q.enqueue(upsert_student_job, university_id, student_dict)
 
-        # Register in cache with full data after successful enqueue
-        cache_data = {
-            "university_id": university_id,
-            "cod_student": student.cod_student,
-            "dni": student.dni,
-            "email": student.email,
-            "displayName": student.displayName,
-            "career": student.career,
-            "studentStatus": student.studentStatus,
-            "createdAt": str(student.createdAt) if student.createdAt else None,
-            "updatedAt": str(student.updatedAt) if student.updatedAt else None,
-        }
-        RedisCache.register_student(student.dni, student.email or "", university_id, cache_data)
-
         if dni_already_registered:
-            return ok(status=200, result="updated", message="Estudiante actualizado exitosamente", data={"dni": student.dni})
+            return ok(status=200, result="updated", message="Student updated successfully", data={"dni": student.dni})
         else:
-            return ok(status=201, result="created", message="Estudiante creado exitosamente", data={"dni": student.dni})
+            return ok(status=201, result="created", message="Student created successfully", data={"dni": student.dni})
     except Exception as e:
         return fail(
             status=500,
             code="QUEUE_ERROR",
-            message=f"Error al encolar el estudiante: {str(e)}"
+            message=f"Error queuing student: {str(e)}"
         )
 
 
@@ -112,12 +118,12 @@ async def pull_student(
     if not student:
         return fail(
             code="STUDENT_NOT_FOUND",
-            message="No se encontró un estudiante con el DNI especificado",
+            message="Student not found with the specified DNI",
             status=404
         )
 
     return ok(
         student,
         result="fetched",
-        message="Estudiante obtenido correctamente"
+        message="Student retrieved successfully"
     )

@@ -13,6 +13,7 @@ from app.infrastructure.embedding.generate_degree import generate_degree
 def upsert_student_job(university_id: str, student_dict: dict) -> str:
     import json
     from app.infrastructure.validation.firebase_validator import FirebaseValidator
+    from app.infrastructure.firebase.firebase_exceptions import FirebaseUserAlreadyExists
     from firebase_admin import credentials, firestore as fb_firestore, get_app, initialize_app
     from google.cloud.firestore import FieldFilter
 
@@ -41,7 +42,11 @@ def upsert_student_job(university_id: str, student_dict: dict) -> str:
             print(f"⚠️  Email duplicado en Firebase: {student.email} como {firebase_type}")
             return "duplicate_email"
 
-    result = uc.execute(student)
+    try:
+        result = uc.execute(student)
+    except FirebaseUserAlreadyExists as e:
+        print(f"⚠️  Email duplicado en Firebase (detectado en crear): {student.email}")
+        return "duplicate_email"
 
     # Register in cache with full data after successful Firebase write
     cache_data = {

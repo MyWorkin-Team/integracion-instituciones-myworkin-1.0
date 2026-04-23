@@ -4,58 +4,58 @@ from pydantic import BaseModel, EmailStr, ConfigDict, Field
 
 class StudentDTO(BaseModel):
     """
-    DTO para registrar o actualizar un estudiante en el sistema.
-    Envía los campos requeridos y opcionalmente los adicionales para enriquecer el perfil.
+    Data Transfer Object for registering or updating a student in the system.
+    Send required fields and optionally additional fields to enrich the profile.
     """
     university_id: str = Field(
         ...,
-        description="Identificador único de la universidad emisora del registro. Debe estar en la lista de universidades permitidas.",
+        description="Unique identifier of the university issuing the registration. Must be in the list of allowed universities.",
         examples=["UCSUR", "UPC", "PUCP"],
     )
     cod_student: str = Field(
         ...,
-        description="Código único de estudiante asignado por la universidad.",
+        description="Unique student code assigned by the university.",
         examples=["EST2024001", "ALU-2024-001"],
     )
     displayName: str = Field(
         ...,
-        description="Nombre completo del estudiante tal como aparece en su documento de identidad.",
+        description="Full name of the student as it appears in their identity document.",
         examples=["Juan Pérez García"],
     )
     email: EmailStr = Field(
         ...,
-        description="Correo electrónico del estudiante. Debe ser único en todo el sistema — no puede estar registrado como estudiante ni como empresa.",
+        description="Student email address. Must be unique in the entire system — cannot be registered as both student and company.",
         examples=["juan.perez@universidad.edu.pe"],
     )
     university: str = Field(
         ...,
-        description="Nombre completo de la universidad a la que pertenece el estudiante.",
+        description="Full name of the university to which the student belongs.",
         examples=["Universidad Científica del Sur"],
     )
     career: str = Field(
         ...,
-        description="Nombre de la carrera o programa académico que cursa o cursó el estudiante.",
-        examples=["Ingeniería de Software"],
+        description="Name of the career or academic program that the student is or was pursuing.",
+        examples=["Software Engineering"],
     )
     studentStatus: Literal["Estudiante", "Egresado"] = Field(
         ...,
-        description="Estado académico actual del estudiante. 'Estudiante' si aún cursa la carrera, 'Egresado' si ya terminó.",
+        description="Current academic status of the student. 'Estudiante' if still studying, 'Egresado' if graduated.",
     )
     phone: Optional[str] = Field(
         None,
-        description="Número de teléfono incluyendo el código de país sin el signo +. Ejemplo: 51 para Perú seguido del número.",
+        description="Phone number including country code without the + sign. Example: 51 for Peru followed by the number.",
         examples=["51987654321"],
     )
     dni: Optional[str] = Field(
         None,
-        description="Documento de identidad del estudiante. El formato varía según el país de origen. DNI, CI, CC, NIE, etc.",
+        description="Student identity document. Format varies depending on country of origin. DNI, CI, CC, NIE, etc.",
         examples=["12345678", "V-12345678", "1234567890", "12345678A"],
     )
     cycle: Optional[int] = Field(
         None,
         ge=1,
         le=12,
-        description="Ciclo académico actual del estudiante, expresado como número entero entre 1 y 12.",
+        description="Current academic cycle of the student, expressed as an integer between 1 and 12.",
         examples=[5],
     )
     model_config = ConfigDict(extra="allow")

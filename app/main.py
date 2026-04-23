@@ -126,7 +126,7 @@ async def firebase_config_error_handler(request: Request, exc: FirebaseConfigErr
         content={
             "status": 500,
             "label": "Internal Server Error",
-            "description": "Error en la configuración de Firebase",
+            "description": "Firebase configuration error",
             "body": {
                 "error": "Firebase Configuration Error",
                 "message": str(exc)
@@ -149,10 +149,10 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
         content={
             "status": 429,
             "label": "Too Many Requests",
-            "description": "Rate limit excedido",
+            "description": "Rate limit exceeded",
             "body": {
                 "error": "Too Many Requests",
-                "message": "Has excedido el límite de peticiones permitidas. Intenta nuevamente más tarde."
+                "message": "You have exceeded the rate limit. Please try again later."
             }
         }
     )

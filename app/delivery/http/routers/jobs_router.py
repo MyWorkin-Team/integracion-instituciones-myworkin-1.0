@@ -76,14 +76,14 @@ async def get_jobs_history():
         return ok(
             status=200,
             result="success",
-            message="Historial de jobs",
+            message="Job history",
             data=history_data
         )
     except Exception as e:
         return fail(
             status=500,
             code="HISTORY_ERROR",
-            message=f"Error al consultar historial: {str(e)}"
+            message=f"Error retrieving history: {str(e)}"
         )
 
 
@@ -115,7 +115,7 @@ async def get_queues():
         return ok(
             status=200,
             result="success",
-            message=f"Total de {total_jobs} jobs en cola",
+            message=f"Total of {total_jobs} jobs in queue",
             data={
                 "total_jobs": total_jobs,
                 "queues": queues_data
@@ -125,7 +125,7 @@ async def get_queues():
         return fail(
             status=500,
             code="QUEUE_ERROR",
-            message=f"Error al consultar colas: {str(e)}"
+            message=f"Error retrieving queues: {str(e)}"
         )
 
 
@@ -140,7 +140,7 @@ async def get_queue_details(queue_name: str):
             return fail(
                 status=400,
                 code="INVALID_QUEUE",
-                message=f"Cola '{queue_name}' no existe. Usa 'students' o 'companies'"
+                message=f"Queue '{queue_name}' does not exist. Use 'students' or 'companies'"
             )
 
         conn = get_redis_connection()
@@ -163,7 +163,7 @@ async def get_queue_details(queue_name: str):
         return ok(
             status=200,
             result="success",
-            message=f"Cola '{queue_name}' contiene {len(job_ids)} jobs",
+            message=f"Queue '{queue_name}' contains {len(job_ids)} jobs",
             data={
                 "queue_name": queue_name,
                 "total_jobs": len(job_ids),
@@ -217,7 +217,7 @@ async def clear_all_queues():
         return ok(
             status=200,
             result="cleared",
-            message="Todas las colas e historial vaciados exitosamente",
+            message="All queues and history cleared successfully",
             data={
                 "total_jobs_deleted": total_deleted,
                 "queues_cleared": queue_names
@@ -227,7 +227,7 @@ async def clear_all_queues():
         return fail(
             status=500,
             code="QUEUE_ERROR",
-            message=f"Error al limpiar colas: {str(e)}"
+            message=f"Error clearing queues: {str(e)}"
         )
 
 
@@ -264,7 +264,7 @@ async def clear_history():
         return ok(
             status=200,
             result="cleared",
-            message="Historial limpiado exitosamente",
+            message="History cleared successfully",
             data={
                 "total_jobs_deleted": total_deleted,
                 "queues_affected": queue_names
@@ -274,7 +274,7 @@ async def clear_history():
         return fail(
             status=500,
             code="HISTORY_ERROR",
-            message=f"Error al limpiar historial: {str(e)}"
+            message=f"Error clearing history: {str(e)}"
         )
 
 
@@ -289,7 +289,7 @@ async def clear_queue(queue_name: str):
             return fail(
                 status=400,
                 code="INVALID_QUEUE",
-                message=f"Cola '{queue_name}' no existe. Usa 'students' o 'companies'"
+                message=f"Queue '{queue_name}' does not exist. Use 'students' or 'companies'"
             )
 
         conn = get_redis_connection()
@@ -300,7 +300,7 @@ async def clear_queue(queue_name: str):
         return ok(
             status=200,
             result="cleared",
-            message=f"Cola '{queue_name}' vaciada exitosamente",
+            message=f"Queue '{queue_name}' cleared successfully",
             data={
                 "queue_name": queue_name,
                 "jobs_deleted": job_count
@@ -310,7 +310,7 @@ async def clear_queue(queue_name: str):
         return fail(
             status=500,
             code="QUEUE_ERROR",
-            message=f"Error al limpiar cola: {str(e)}"
+            message=f"Error clearing queue: {str(e)}"
         )
 
 
@@ -348,7 +348,7 @@ async def get_cached_entities():
         return fail(
             status=500,
             code="CACHE_ERROR",
-            message=f"Error al consultar datos: {str(e)}"
+            message=f"Error retrieving data: {str(e)}"
         )
 
 
@@ -370,7 +370,7 @@ async def clear_cached_entities():
         return fail(
             status=500,
             code="CACHE_ERROR",
-            message=f"Error al limpiar datos: {str(e)}"
+            message=f"Error clearing data: {str(e)}"
         )
 
 
@@ -388,14 +388,14 @@ async def delete_job(job_id: str):
         return ok(
             status=200,
             result="deleted",
-            message=f"Job '{job_id}' eliminado exitosamente",
+            message=f"Job '{job_id}' deleted successfully",
             data={"job_id": job_id}
         )
     except Exception as e:
         return fail(
             status=404,
             code="JOB_NOT_FOUND",
-            message=f"Job no encontrado: {str(e)}"
+            message=f"Job not found: {str(e)}"
         )
 
 
@@ -420,21 +420,21 @@ async def get_job_status(job_id: str):
             return ok(
                 status=200,
                 result="finished",
-                message="Job completado exitosamente",
+                message="Job completed successfully",
                 data=data
             )
         elif job.is_failed:
             return ok(
                 status=200,
                 result="failed",
-                message="Job falló",
+                message="Job failed",
                 data=data
             )
         else:
             return ok(
                 status=200,
                 result="processing",
-                message=f"Job en estado: {job.get_status()}",
+                message=f"Job in status: {job.get_status()}",
                 data=data
             )
 
@@ -442,5 +442,5 @@ async def get_job_status(job_id: str):
         return fail(
             status=404,
             code="JOB_NOT_FOUND",
-            message=f"No se encontró el job: {str(e)}"
+            message=f"Job not found: {str(e)}"
         )
