@@ -21,12 +21,36 @@ class ApiResponse(BaseModel, Generic[T]):
     data: Optional[T] = None
     error: Optional[ApiError] = None
 
+def _translate_validation_message(msg: str, ctx: dict = None) -> str:
+    translations = {
+        "Input should be": "Debe ser",
+        "or": "o",
+        "Field required": "Campo requerido",
+        "String should have at least": "El texto debe tener al menos",
+        "characters": "caracteres",
+        "Invalid email": "Correo electrónico inválido",
+        "value_error.pattern": "No cumple con el formato requerido",
+    }
+
+    result = msg
+    for en, es in translations.items():
+        result = result.replace(en, es)
+
+    if "Input should be" in msg and ctx and "expected" in ctx:
+        expected = str(ctx.get("expected", ""))
+        result = f"Debe ser {expected}"
+
+    return result
+
 def _serialize_errors(errors: list) -> list:
     result = []
     for error in errors:
         serializable = {}
         for key, value in error.items():
-            if key == "ctx" and isinstance(value, dict):
+            if key == "msg":
+                ctx = error.get("ctx", {})
+                serializable[key] = _translate_validation_message(value, ctx)
+            elif key == "ctx" and isinstance(value, dict):
                 serializable[key] = {
                     k: str(v) if isinstance(v, Exception) else v
                     for k, v in value.items()

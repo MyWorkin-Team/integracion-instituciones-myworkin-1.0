@@ -59,8 +59,6 @@ def upsert_student_job(university_id: str, student_dict: dict) -> str:
     # Generar degree si hay career
     if student.career:
         try:
-            print(f"\n🔄 [DEGREE_JOB] Generando degree para {student.dni}")
-
             # Obtener país
             countries_json = os.getenv("UNIVERSITY_COUNTRIES", "{}")
             countries = json.loads(countries_json)
@@ -119,13 +117,11 @@ def upsert_student_job(university_id: str, student_dict: dict) -> str:
 
             if docs:
                 docs[0].reference.update({"degree": degree_dict})
-                print(f"✅ Degree guardado para {student.dni}")
+                print(f"✅ [DEGREE] {student.dni} → {degree.displayName}")
             else:
-                print(f"⚠️  No se encontró estudiante con DNI {student.dni}")
+                raise ValueError(f"Estudiante no encontrado: {student.dni}")
 
         except Exception as e:
-            print(f"❌ Error generando degree: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            print(f"❌ [DEGREE] {student.dni}: {str(e)}")
 
     return result

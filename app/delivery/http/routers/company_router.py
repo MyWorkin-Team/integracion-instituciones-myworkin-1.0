@@ -1,4 +1,5 @@
 
+import logging
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.params import Depends
 from dataclasses import asdict
@@ -26,6 +27,7 @@ from app.infrastructure.cache.redis_cache import RedisCache
 from app.infrastructure.validation.firebase_validator import FirebaseValidator
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 @router.post(
     "/push",
@@ -37,6 +39,7 @@ async def upsert_company(
     request: Request,
     body: CompanyDTO,
 ):
+    logging.info(f"Received upsert_company request with body: {body}")
     university_id = body.university_id
     company = company_to_domain(body)
 
@@ -48,6 +51,24 @@ async def upsert_company(
         )
 
     ruc_already_registered = RedisCache.is_ruc_registered(company.ruc, university_id)
+
+    logging.info(f"RUC {company.ruc} already registered: {ruc_already_registered}")
+    # Validar que al crear, debe tener users_companies con al mínimo un CEO
+    if not ruc_already_registered:
+        if not company.users_companies or len(company.users_companies) == 0:
+            return fail(
+                status=400,
+                code="MISSING_USERS_COMPANIES",
+                message="Al crear una empresa, debe proporcionar al menos un usuario con rol 'ceo' en users_companies"
+            )
+
+        ceo_exists = any(user.get("role") == "ceo" for user in company.users_companies if isinstance(user, dict))
+        if not ceo_exists:
+            return fail(
+                status=400,
+                code="MISSING_CEO",
+                message="Al crear una empresa, debe haber al menos un usuario con rol 'ceo'"
+            )
 
     # Validate company emails globally (Cascading: Redis → Firebase)
     if company.users_companies:

@@ -12,10 +12,19 @@ class UpsertCompanyUseCase:
 
     def execute(self, company: Company):
         now = datetime.now(timezone.utc)
-        
+
         # 1. Intentar buscar por RUC
         existing = self.repo.find_by_ruc(company.ruc)
-        
+
+        # Validar que al crear, debe haber al mínimo un usuario con rol "ceo"
+        if not existing:
+            if not company.users_companies or len(company.users_companies) == 0:
+                raise ValueError("Al crear una empresa, debe proporcionar al menos un usuario con rol 'ceo' en users_companies")
+
+            ceo_exists = any(user.get("role") == "ceo" for user in company.users_companies)
+            if not ceo_exists:
+                raise ValueError("Al crear una empresa, debe haber al menos un usuario con rol 'ceo'")
+
         if existing:
             # 2. Si existe, actualizar
             company.id = existing.get("id")
