@@ -23,13 +23,12 @@ def upsert_company_job(university_id: str, company_dict: dict) -> str:
     result = uc.execute(company)
 
     # Register in cache with full data after successful Firebase write
-    company_email = ""
+    company_email = company.email or ""
     users_data = []
     owner_uid = None
     roles = {}
 
     if company.users_companies:
-        company_email = company.users_companies[0].get("email", "")
         for user in company.users_companies:
             users_data.append({
                 "email": user.get("email"),

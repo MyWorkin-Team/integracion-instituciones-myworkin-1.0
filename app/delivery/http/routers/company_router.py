@@ -51,23 +51,6 @@ async def upsert_company(
 
     ruc_already_registered = RedisCache.is_ruc_registered(company.ruc, university_id)
 
-    # Validar que al crear, debe tener users_companies con al mínimo un CEO
-    if not ruc_already_registered:
-        if not company.users_companies or len(company.users_companies) == 0:
-            return fail(
-                status=400,
-                code="MISSING_USERS_COMPANIES",
-                message="Al crear una empresa, debe proporcionar al menos un usuario con rol 'owner' en users_companies"
-            )
-
-        owner_exists = any(user.get("role") == "owner" for user in company.users_companies if isinstance(user, dict))
-        if not owner_exists:
-            return fail(
-                status=400,
-                code="MISSING_OWNER",
-                message="Al crear una empresa, debe haber al menos un usuario con rol 'owner'"
-            )
-
     # Validate company emails globally (Cascading: Redis → Firebase)
     if company.users_companies:
         for user in company.users_companies:

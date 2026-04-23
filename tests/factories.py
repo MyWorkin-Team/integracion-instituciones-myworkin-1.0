@@ -53,11 +53,9 @@ def valid_company_payload(**overrides) -> dict:
     """
     base = {
         "university_id": "TESTUNI",
-        "company_id": "test-company",
         "displayName": "Test Corp",
         "ruc": "12345678901",
-        "contactEmail": "contact@test.com",
-        "status": "active",
+        "email": "contact@test.com",
     }
     base.update(overrides)
     return base
@@ -65,46 +63,19 @@ def valid_company_payload(**overrides) -> dict:
 
 def valid_company_full_payload(**overrides) -> dict:
     """
-    Build a company payload with all optional fields and users_companies.
+    Build a company payload with all optional fields.
 
     @param overrides - Fields to override in the default payload.
     @returns Dict matching CompanyDTO schema with optional fields.
     """
     base = valid_company_payload(
-        logo="https://example.com/logo.png",
+        logotype="https://example.com/logo.png",
         description="A test company",
-        sitio_web="https://example.com",
+        website="https://example.com",
         representative="Maria Lopez",
         sector="Technology",
         phone="51912345678",
-        users_companies=[
-            {
-                "email": "ceo@test.com",
-                "role": "ceo",
-                "status": "active",
-            }
-        ],
     )
-    base.update(overrides)
-    return base
-
-
-def user_company_payload(
-    email: str = "user@test.com",
-    role: str = "admin",
-    status: str = "active",
-    **overrides,
-) -> dict:
-    """
-    Build a UserCompanyDTO entry.
-
-    @param email - User email.
-    @param role - User role (ceo, admin, recruiter).
-    @param status - User status (active, inactive).
-    @param overrides - Additional fields.
-    @returns Dict matching UserCompanyDTO schema.
-    """
-    base = {"email": email, "role": role, "status": status}
     base.update(overrides)
     return base
 

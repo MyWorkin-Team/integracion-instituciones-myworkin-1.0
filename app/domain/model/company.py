@@ -10,16 +10,15 @@ class Company:
     """
 
     # === IDENTIDAD ===
-    company_id: Optional[str] = None
     displayName: Optional[str] = None
-    logo: Optional[str] = None
+    logotype: Optional[str] = None
     ruc: Optional[str] = None
     importedId: Optional[str] = None
 
     # === INFORMACION ===
     description: Optional[str] = None
-    sitio_web: Optional[str] = None
-    contactEmail: Optional[str] = None
+    website: Optional[str] = None
+    email: Optional[str] = None
     representative: Optional[str] = None
     phone: Optional[str] = None
 
@@ -29,6 +28,7 @@ class Company:
     roles: Optional[dict] = None
     status: Optional[str] = None
     users_companies: Optional[List[dict]] = None
+    forcePasswordChangeOnNextLogin: bool = True
 
     # === RESPONSE (solo lectura) ===
     id: Optional[str] = None

@@ -162,3 +162,30 @@ class CompanyRepositoryAdapter(CompanyRepositoryPort):
         data = docs[0].to_dict()
         data["id"] = docs[0].id
         return data
+
+    def find_user_company_by_email_and_role(self, company_id: str, role: str) -> Optional[dict]:
+        """Busca un usuario en la colección users_companies por companyId y role"""
+        docs = (
+            self.users_companies_collection
+            .where(filter=FieldFilter("companyId", "==", company_id))
+            .where(filter=FieldFilter("role", "==", role))
+            .limit(1)
+            .stream()
+        )
+
+        docs = list(docs)
+        if not docs:
+            return None
+
+        data = docs[0].to_dict()
+        data["id"] = docs[0].id
+        return data
+
+    def update_user_company_email(self, user_company_id: str, new_email: str) -> bool:
+        """Actualiza el email de un usuario en la colección users_companies"""
+        try:
+            doc_ref = self.users_companies_collection.document(user_company_id)
+            doc_ref.update({"email": new_email})
+            return True
+        except Exception as e:
+            return False

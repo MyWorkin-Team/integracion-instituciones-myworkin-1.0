@@ -17,10 +17,10 @@ def company_to_domain(body: CompanyDTO) -> Company:
     # ruc: taxId -> ruc
     ruc = data.get("ruc") or data.get("taxId")
 
-    # sitio_web: website -> sitio_web
-    sitio_web = data.get("sitio_web") or data.get("website")
-    if sitio_web:
-        sitio_web = str(sitio_web)
+    # website: website -> website
+    website = data.get("website") or data.get("sitio_web")
+    if website:
+        website = str(website)
 
     # sector: extraer de industries[0].label si no viene (formato antiguo)
     sector = data.get("sector")
@@ -29,12 +29,12 @@ def company_to_domain(body: CompanyDTO) -> Company:
         if industries and len(industries) > 0:
             sector = industries[0].get("label")
 
-    # contactEmail: extraer de primaryContact si no viene
-    contact_email = data.get("contactEmail")
-    if not contact_email:
+    # email: extraer de primaryContact si no viene
+    email_field = data.get("email") or data.get("contactEmail")
+    if not email_field:
         primary_contact = data.get("primaryContact")
         if primary_contact and isinstance(primary_contact, dict):
-            contact_email = primary_contact.get("email")
+            email_field = primary_contact.get("email")
 
     # phone: extraer de primaryContact si no viene
     phone = data.get("phone")
@@ -45,16 +45,15 @@ def company_to_domain(body: CompanyDTO) -> Company:
 
     return Company(
         # === IDENTIDAD ===
-        company_id=data.get("company_id"),
         displayName=display_name,
-        logo=data.get("logo"),
+        logotype=data.get("logotype") or data.get("logo"),
         ruc=ruc,
         importedId=data.get("importedId"),
 
         # === INFORMACION ===
         description=data.get("description") or data.get("overview"),
-        sitio_web=sitio_web,
-        contactEmail=contact_email,
+        website=website,
+        email=email_field,
         representative=data.get("representative"),
         phone=phone,
 
@@ -63,7 +62,7 @@ def company_to_domain(body: CompanyDTO) -> Company:
         companySize=data.get("companySize"),
         roles=data.get("roles"),
         status=data.get("status") or "active",
-        users_companies=[c.model_dump() for c in body.users_companies] if body.users_companies else None,
+        users_companies=data.get("users_companies"),
 
         # === RESPONSE ===
         id=data.get("id"),

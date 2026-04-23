@@ -47,7 +47,9 @@ def _serialize_errors(errors: list) -> list:
     for error in errors:
         serializable = {}
         for key, value in error.items():
-            if key == "msg":
+            if key == "input":
+                continue
+            elif key == "msg":
                 ctx = error.get("ctx", {})
                 serializable[key] = _translate_validation_message(value, ctx)
             elif key == "ctx" and isinstance(value, dict):
