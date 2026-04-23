@@ -13,6 +13,7 @@ def student_to_domain(dto: StudentDTO) -> Student:
     dni = data.get("dni") or data.get("numeroDocumento")
     return Student(
         career=career,
+        cod_student=data.get("cod_student"),
         cycle=data.get("cycle"),
         displayName=data.get("displayName"),
         dni=dni,

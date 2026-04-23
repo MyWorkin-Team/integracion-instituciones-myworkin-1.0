@@ -12,6 +12,11 @@ class StudentDTO(BaseModel):
         description="Identificador único de la universidad emisora del registro. Debe estar en la lista de universidades permitidas.",
         examples=["UCSUR", "UPC", "PUCP"],
     )
+    cod_student: str = Field(
+        ...,
+        description="Código único de estudiante asignado por la universidad.",
+        examples=["EST2024001", "ALU-2024-001"],
+    )
     displayName: str = Field(
         ...,
         description="Nombre completo del estudiante tal como aparece en su documento de identidad.",

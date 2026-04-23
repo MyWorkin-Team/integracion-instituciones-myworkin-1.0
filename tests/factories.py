@@ -17,6 +17,7 @@ def valid_student_payload(**overrides) -> dict:
     """
     base = {
         "university_id": "TESTUNI",
+        "cod_student": "EST2024001",
         "displayName": "Juan Perez",
         "email": "juan@test.edu",
         "university": "Test University",

@@ -16,6 +16,7 @@ class Student:
     Actualizado según el esquema solicitado.
     """
     career: Optional[str] = None
+    cod_student: Optional[str] = None
     degree: Optional[Degree] = None
     createdAt: Optional[datetime] = None
     createdFrom: Optional[str] = None

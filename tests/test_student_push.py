@@ -46,18 +46,35 @@ def test_update_student_happy_path(api_context: APIRequestContext) -> None:
 def test_missing_dni(api_context: APIRequestContext) -> None:
     """
     Test that missing DNI returns a 400 error.
-    
+
     @param api_context - Playwright APIRequestContext fixture
     """
     payload = valid_student_payload()
     del payload["dni"]
     headers = valid_auth_headers()
-    
+
     response = api_context.post("/api/students/push", data=payload, headers=headers)
     assert response.status == 400
-    
+
     data = response.json()
     assert_error(data, 400, "INVALID_DATA")
+
+
+def test_missing_cod_student(api_context: APIRequestContext) -> None:
+    """
+    Test that missing cod_student returns a 422 validation error.
+
+    @param api_context - Playwright APIRequestContext fixture
+    """
+    payload = valid_student_payload()
+    del payload["cod_student"]
+    headers = valid_auth_headers()
+
+    response = api_context.post("/api/students/push", data=payload, headers=headers)
+    assert response.status == 422 or response.status == 400
+
+    data = response.json()
+    assert data["status"] in [400, 422]
 
 
 def test_duplicate_email_redis(api_context: APIRequestContext) -> None:
@@ -183,11 +200,12 @@ def test_full_payload_with_optional_fields(api_context: APIRequestContext) -> No
 def test_minimal_payload_required_only(api_context: APIRequestContext) -> None:
     """
     Test creating a student with only the required fields plus DNI.
-    
+
     @param api_context - Playwright APIRequestContext fixture
     """
     payload = {
         "university_id": "TESTUNI",
+        "cod_student": "EST2024999",
         "displayName": "Minimal Student",
         "email": "minimal@test.edu",
         "university": "Test University",
@@ -196,10 +214,10 @@ def test_minimal_payload_required_only(api_context: APIRequestContext) -> None:
         "dni": "66666666"
     }
     headers = valid_auth_headers()
-    
+
     response = api_context.post("/api/students/push", data=payload, headers=headers)
     assert response.status == 201
-    
+
     data = response.json()
     assert_success(data, 201, "created")
 

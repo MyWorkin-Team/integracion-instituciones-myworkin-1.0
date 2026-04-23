@@ -62,6 +62,7 @@ async def upsert_student(
         # Register in cache with full data after successful enqueue
         cache_data = {
             "university_id": university_id,
+            "cod_student": student.cod_student,
             "dni": student.dni,
             "email": student.email,
             "displayName": student.displayName,
