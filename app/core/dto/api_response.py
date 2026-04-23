@@ -21,6 +21,22 @@ class ApiResponse(BaseModel, Generic[T]):
     data: Optional[T] = None
     error: Optional[ApiError] = None
 
+def _serialize_errors(errors: list) -> list:
+    result = []
+    for error in errors:
+        serializable = {}
+        for key, value in error.items():
+            if key == "ctx" and isinstance(value, dict):
+                serializable[key] = {
+                    k: str(v) if isinstance(v, Exception) else v
+                    for k, v in value.items()
+                }
+            else:
+                serializable[key] = value
+        result.append(serializable)
+    return result
+
+
 async def validation_exception_handler(
     request: Request,
     exc: RequestValidationError
@@ -34,7 +50,7 @@ async def validation_exception_handler(
             "body": {
                 "error": "Bad Request",
                 "message": "El cuerpo de la petición contiene datos inválidos o mal formateados.",
-                "details": exc.errors()  
+                "details": _serialize_errors(exc.errors())
             }
         }
     )

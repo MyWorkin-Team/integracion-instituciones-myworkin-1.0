@@ -47,12 +47,9 @@ class CompanyDTO(BaseModel):
     )
     ruc: str = Field(
         ...,
-        min_length=11,
-        max_length=11,
         description=(
             "Número de identificación tributaria de la empresa. Conocido como RUC en Perú, "
-            "NIT en Colombia, CUIT/CUIL en Argentina, RUT en Chile, RFC en México. "
-            "Debe tener exactamente 11 dígitos numéricos."
+            "NIT en Colombia, CUIT/CUIL en Argentina, RUT en Chile, RFC en México."
         ),
         examples=["20123456789"],
     )
@@ -104,10 +101,9 @@ class CompanyDTO(BaseModel):
     @field_validator('ruc')
     @classmethod
     def validate_ruc(cls, v: str):
-        if not v.isdigit():
-            raise ValueError('El RUC debe contener solo números')
-        if len(v) != 11:
-            raise ValueError('El RUC debe tener exactamente 11 dígitos')
+        import re
+        if not re.match(r'^[A-Za-z0-9\-]+$', v):
+            raise ValueError('El RUC solo puede contener letras, números y guiones')
         return v
 
     @field_validator('phone')
