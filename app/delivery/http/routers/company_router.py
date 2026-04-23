@@ -32,7 +32,40 @@ logger = logging.getLogger(__name__)
 @router.post(
     "/push",
     dependencies=[Depends(require_api_key), Depends(validate_university_id)],
-    response_model=ApiResponse[dict]
+    response_model=ApiResponse[dict],
+    summary="Crear o actualizar empresa",
+    description="""
+Crea o actualiza una empresa en el sistema.
+
+**Comportamiento:**
+- **Crear**: Si el RUC no existe, se crea una nueva empresa
+- **Actualizar**: Si el RUC ya existe, se actualiza la empresa existente
+
+**Campos requeridos:**
+- `university_id`: Identificador de la universidad (ej: UCC-TEST, UCSUR)
+- `displayName`: Nombre comercial (mín. 2 caracteres)
+- `ruc`: Número de identificación tributaria (acepta también 'cuit' que se mapea a 'ruc')
+- `email`: Correo electrónico de contacto
+
+**Campos opcionales:**
+- `logotype`: URL del logo
+- `description`: Descripción de la empresa
+- `website`: Sitio web oficial
+- `representative`: Nombre del representante legal
+- `sector`: Sector/industria
+- `phone`: Teléfono (solo dígitos)
+- `status`: "active" (defecto) o "inactive"
+
+**Automático al crear:**
+- Se crea automáticamente un usuario con rol 'owner' usando el email de la empresa
+- La contraseña del usuario es el RUC de la empresa
+- Se marca `forcePasswordChangeOnNextLogin: true`
+
+**Validaciones:**
+- El email debe ser único en el sistema (no puede ser usado por estudiantes u otras empresas)
+- El RUC solo puede contener letras, números y guiones
+- El teléfono solo puede contener dígitos
+    """,
 )
 @limiter.limit("3000/minute")
 async def upsert_company(
