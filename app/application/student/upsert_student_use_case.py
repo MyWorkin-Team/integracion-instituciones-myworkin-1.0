@@ -54,7 +54,7 @@ class UpsertStudentUseCase:
                 app=self.repo.app,
                 uid=uid,
                 email=student.email,
-                password=student.dni,  # DNI como password inicial
+                password=student.cod_student,
                 display_name=student.displayName
             )
 
