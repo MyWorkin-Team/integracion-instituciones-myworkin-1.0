@@ -20,9 +20,10 @@ class CompanyDTO(BaseModel):
     )
     ruc: str = Field(
         ...,
+        alias="cuit",
         description=(
-            "Número de identificación tributaria de la empresa. Conocido como RUC en Perú, "
-            "NIT en Colombia, CUIT/CUIL en Argentina, RUT en Chile, RFC en México."
+            "Company tax identification number. Known as RUC in Peru, "
+            "NIT in Colombia, CUIT/CUIL in Argentina, RUT in Chile, RFC in Mexico."
         ),
         examples=["20123456789"],
     )
@@ -65,7 +66,7 @@ class CompanyDTO(BaseModel):
         description="Company phone number including country code, digits only without the + sign.",
         examples=["5112345678"],
     )
-    model_config = ConfigDict(extra="allow")
+    model_config = ConfigDict(extra="allow", populate_by_name=True)
 
     @model_validator(mode='before')
     @classmethod

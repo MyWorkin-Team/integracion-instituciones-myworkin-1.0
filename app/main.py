@@ -48,7 +48,7 @@ class JSONCleanerMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 app = FastAPI(
-    title="Integración Instituciones - MyWorkIn",
+    title="Institution Integration - MyWorkIn",
     version="1.0.0",
     docs_url=None,
     redoc_url=None,
@@ -85,7 +85,7 @@ async def scalar_docs():
     <!doctype html>
     <html>
       <head>
-        <title>Integración Instituciones - MyWorkIn</title>
+        <title>Institution Integration - MyWorkIn</title>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>

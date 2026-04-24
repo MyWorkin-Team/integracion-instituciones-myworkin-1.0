@@ -33,39 +33,7 @@ logger = logging.getLogger(__name__)
     "/push",
     dependencies=[Depends(require_api_key), Depends(validate_university_id)],
     response_model=ApiResponse[dict],
-    summary="Create or update company",
-    description="""
-Creates or updates a company in the system.
-
-**Behavior:**
-- **Create**: If the tax ID (RUC) does not exist, a new company is created
-- **Update**: If the tax ID (RUC) already exists, the existing company is updated
-
-**Required fields:**
-- `university_id`: University identifier (e.g., UCC-TEST, UCSUR)
-- `displayName`: Company name (min. 2 characters)
-- `ruc`: Tax identification number (also accepts 'cuit' which is mapped to 'ruc')
-- `email`: Contact email address
-
-**Optional fields:**
-- `logotype`: Logo URL
-- `description`: Company description
-- `website`: Official website
-- `representative`: Legal representative name
-- `sector`: Industry/sector
-- `phone`: Phone number (digits only)
-- `status`: "active" (default) or "inactive"
-
-**Automatic on creation:**
-- An 'owner' role user is automatically created using the company email
-- The user password is the company's tax ID (RUC)
-- `forcePasswordChangeOnNextLogin` is set to true
-
-**Validations:**
-- Email must be unique in the system (cannot be used by students or other companies)
-- Tax ID (RUC) can only contain letters, numbers, and hyphens
-- Phone can only contain digits
-    """,
+    summary="Upsert Company"
 )
 @limiter.limit("3000/minute")
 async def upsert_company(
