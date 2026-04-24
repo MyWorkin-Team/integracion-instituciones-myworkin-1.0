@@ -46,8 +46,8 @@ class StudentDTO(BaseModel):
         description="Phone number including country code without the + sign. Example: 51 for Peru followed by the number.",
         examples=["51987654321"],
     )
-    dni: Optional[str] = Field(
-        None,
+    dni: str = Field(
+        ...,
         description="Student identity document. Format varies depending on country of origin. DNI, CI, CC, NIE, etc.",
         examples=["12345678", "V-12345678", "1234567890", "12345678A"],
     )
